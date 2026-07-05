@@ -17,19 +17,30 @@
         .vc-day { min-height: 65px !important; position: relative; padding-top: 4px; }
         .vanilla-calendar-day__btn { align-items: flex-start !important; justify-content: center !important; }
         
+        .vanilla-calendar-day__btn_selected {
+            background-color: #92A8D1 !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(146, 168, 209, 0.4) !important;
+        }
+        .vanilla-calendar-day__btn_today {
+            color: #F7CAC9 !important;
+            background-color: #FFF0F0 !important;
+        }
+        
         .day-cost { 
             position: absolute; 
             bottom: 4px; 
             left: 50%; 
             transform: translateX(-50%); 
-            font-size: 9px; 
+            font-size: 8.5px; 
+            letter-spacing: -0.3px;
             color: white; 
             font-weight: bold; 
             background: linear-gradient(to right, #92A8D1, #F7CAC9);
             border-radius: 4px; 
-            padding: 2px 4px; 
+            padding: 1px 3px; 
             text-align: center; 
-            width: 85%; 
+            width: 90%; 
             line-height: 1.1; 
             white-space: nowrap; 
             overflow: hidden; 
@@ -44,7 +55,6 @@
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* 隱藏捲軸但可滾動 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -61,8 +71,16 @@
 
         <main id="view-calendar" class="p-4">
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 mb-4">
-                <div id="calendar" class="w-full"></div>
-                <div class="flex justify-around items-center text-sm mt-3 pt-3 border-t border-gray-100">
+                <div id="calendar" class="w-full mb-1"></div>
+                
+                <div class="flex justify-end px-2 mb-2">
+                    <div class="bg-gray-100 p-0.5 rounded-md flex text-[10px] font-bold">
+                        <button id="btn-cal-twd" onclick="changeCalendarCurrency('TWD')" class="px-2 py-1 rounded bg-white text-[#92A8D1] shadow-sm transition-all">NT$</button>
+                        <button id="btn-cal-krw" onclick="changeCalendarCurrency('KRW')" class="px-2 py-1 text-gray-400 transition-all">₩</button>
+                    </div>
+                </div>
+
+                <div class="flex justify-around items-center text-sm pt-3 border-t border-gray-100">
                     <div class="text-center w-1/2 border-r border-gray-100">
                         <div class="text-[10px] text-gray-400 font-bold tracking-wider mb-1">本月總支出</div>
                         <div id="month-total-expense" class="font-black text-[#92A8D1] text-base">NT$ 0</div>
@@ -112,24 +130,82 @@
             </div>
         </main>
 
+        <!-- ==================== 🌟 全新複合式：克拉島 (搜尋 + 百寶箱) ==================== -->
         <main id="view-tools" class="p-4 hidden-view">
-            <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 text-center mt-4">
-                <div class="text-5xl mb-4">💎</div>
-                <h2 class="text-lg font-bold text-gray-800 mb-2">克拉專屬百寶箱</h2>
-                <p class="text-xs text-gray-500 leading-relaxed">帶著勝哲的保佑，在韓國好好生活吧！</p>
+            <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 min-h-[70vh]">
+                <h2 class="text-lg font-black text-gray-800 mb-4 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] bg-clip-text text-transparent flex items-center gap-2">
+                    <span>💎</span> 歡迎來到克拉島
+                </h2>
+                
+                <!-- 搜尋框 -->
+                <div class="relative mb-6">
+                    <input type="text" id="search-input" oninput="executeSearch()" placeholder="搜尋備註、分類或卡片..." class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-3 px-4 pl-10 font-bold text-sm text-gray-700 outline-none focus:border-[#92A8D1] transition-colors">
+                    <span class="absolute left-4 top-3.5 text-gray-400">🔍</span>
+                </div>
+                
+                <!-- 搜尋結果區 (打字時才會出現) -->
+                <div id="search-results-list" class="space-y-3 pb-6 hidden-view"></div>
+
+                <!-- 🌟 克拉專屬百寶箱選單 (沒打字時顯示) -->
+                <div id="tools-menu" class="space-y-3">
+                    <h3 class="text-xs font-black text-gray-400 mb-2 mt-4 uppercase tracking-wider px-1">克拉必備小工具</h3>
+                    
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#FFF0F0] transition-colors active:scale-95">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl drop-shadow-sm">🍒</span>
+                            <span class="font-bold text-gray-700">勝哲的周邊預算池</span>
+                        </div>
+                        <span class="text-gray-400 font-bold text-[10px] bg-gray-200 px-2 py-1 rounded-full">開發中</span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#F0F4FF] transition-colors active:scale-95">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl drop-shadow-sm">🎫</span>
+                            <span class="font-bold text-gray-700">首爾場搶票小金庫</span>
+                        </div>
+                        <span class="text-gray-400 font-bold text-[10px] bg-gray-200 px-2 py-1 rounded-full">開發中</span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors active:scale-95">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl drop-shadow-sm">☕</span>
+                            <span class="font-bold text-gray-700">聖水洞踩點清單</span>
+                        </div>
+                        <span class="text-gray-400 font-bold text-[10px] bg-gray-200 px-2 py-1 rounded-full">開發中</span>
+                    </div>
+
+                    <!-- 把這段貼到 view-tools 的 list 裡面 -->
+<div onclick="window.open('https://forms.gle/CizB4A9W6t6Wn4sq8', '_blank')" class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#F7CAC9]/20 transition-colors active:scale-95 border border-dashed border-gray-300">
+    <div class="flex items-center gap-3">
+        <span class="text-2xl drop-shadow-sm">📝</span>
+        <span class="font-bold text-gray-700">追星周邊表單</span>
+    </div>
+    <span class="text-[#92A8D1] font-bold text-sm">前往 &raquo;</span>
+</div>
+
+                    <h3 class="text-xs font-black text-gray-400 mb-2 mt-6 uppercase tracking-wider px-1">系統設定</h3>
+                    
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors active:scale-95">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">⚙️</span>
+                            <span class="font-bold text-gray-600 text-sm">設定與資料備份</span>
+                        </div>
+                        <span class="text-gray-400 font-bold text-lg">&rsaquo;</span>
+                    </div>
+                </div>
+
             </div>
         </main>
 
-        <!-- ==================== 🌟 大幅更新的記帳彈出視窗 ==================== -->
         <div id="modal-input" class="fixed inset-0 z-[60] flex flex-col justify-end hidden-view">
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
             
-            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar">
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[96vh] overflow-y-auto animate-slide-up no-scrollbar">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
                 <button onclick="closeModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
                 <h2 id="modal-title" class="text-lg font-black text-gray-800 mb-5 ml-1">新增紀錄 💸</h2>
                 
                 <form id="ledger-form" class="space-y-4">
-                    <!-- 第一列：金額 -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 focus-within:border-[#92A8D1] transition-colors">
                         <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">金額</label>
                         <div class="flex items-center">
@@ -142,7 +218,6 @@
                         </div>
                     </div>
 
-                    <!-- 第二列：日期 (左) + 付款方式 (右) -->
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">日期</label>
@@ -165,34 +240,34 @@
                         </div>
                     </div>
 
-                    <!-- 第三列：🌟 全新網格化分類 (超精緻) -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                         <label class="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">選擇分類</label>
-                        
-                        <!-- 支出區塊 -->
-                        <div class="grid grid-cols-4 gap-3 mb-4" id="expense-categories">
-                            <!-- JS 動態生成 -->
-                        </div>
-
-                        <!-- 收入區塊 -->
+                        <div class="grid grid-cols-4 gap-3 mb-4" id="expense-categories"></div>
                         <div class="border-t border-dashed border-gray-200 pt-3">
-                            <div class="grid grid-cols-4 gap-3" id="income-categories">
-                                <!-- JS 動態生成 -->
-                            </div>
+                            <div class="grid grid-cols-4 gap-3" id="income-categories"></div>
                         </div>
                     </div>
 
-                    <!-- 第四列：備註 -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 focus-within:border-[#F7CAC9] transition-colors">
-                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">備註</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">備註 (選填)</label>
                         <input type="text" id="note" placeholder="寫點什麼..." class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent placeholder-gray-300">
                     </div>
 
-                    <div class="flex gap-3 mt-6">
+                    <div class="flex gap-3 mt-4 pb-4">
                         <button type="button" id="btn-delete" onclick="deleteRecord()" class="hidden-view w-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center font-bold transition-transform active:scale-95 text-xl">🗑️</button>
                         <button type="submit" id="btn-submit" class="flex-1 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#92A8D1]/30 transition-transform active:scale-95 text-lg">儲存</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <div id="modal-drilldown" class="fixed inset-0 z-[60] flex flex-col justify-end hidden-view">
+            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeDrilldownModal()"></div>
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[85vh] overflow-y-auto animate-slide-up no-scrollbar">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <button onclick="closeDrilldownModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
+                <h2 id="drilldown-title" class="text-lg font-black text-gray-800 mb-5 ml-1 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] bg-clip-text text-transparent">明細總覽</h2>
+                <div id="drilldown-list" class="space-y-3 pb-6"></div>
             </div>
         </div>
 
@@ -211,13 +286,12 @@
                 <span class="text-xl mb-1">💳</span><span class="text-[10px] font-bold">錢包</span>
             </button>
             <button onclick="switchTab('tools')" id="tab-tools" class="flex flex-col items-center p-2 text-gray-400 transition-colors w-1/4">
-                <span class="text-xl mb-1">🎒</span><span class="text-[10px] font-bold">更多</span>
+                <span class="text-xl mb-1">💎</span><span class="text-[10px] font-bold">克拉島</span>
             </button>
         </nav>
 
     </div>
 
-    <!-- 刪除確認彈窗 -->
     <div id="delete-modal" class="hidden-view fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-6">
         <div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm">
             <h3 class="text-lg font-black text-gray-800 mb-2">確定要刪除嗎？</h3>
@@ -235,43 +309,40 @@
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const KRW_RATE = 0.024; 
         
+        function getLocalDateStr(date = new Date()) {
+            const tzOffset = date.getTimezoneOffset() * 60000;
+            return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+        }
+
         let allRecords = []; 
-        let selectedDateStr = new Date().toISOString().split('T')[0]; 
+        let selectedDateStr = getLocalDateStr(); 
         let currentEditingId = null;
         let myCalendar = null; 
+        let calendarDisplayCurrency = 'TWD'; 
 
-        // 🌟 更新的精細分類 (完美解決分支太長的問題)
         const incomeCategories = ['生活費', '退款'];
-        
         const categoryConfig = {
-            // 支出類
-            '早餐': { icon: '🥞', color: '#F7CAC9', type: 'expense' }, 
-            '午餐': { icon: '🍱', color: '#F7CAC9', type: 'expense' }, 
-            '晚餐': { icon: '🥩', color: '#F7CAC9', type: 'expense' }, 
-            '點心': { icon: '🍰', color: '#F7CAC9', type: 'expense' }, 
-            '飲料': { icon: '🧋', color: '#F7CAC9', type: 'expense' },
+            '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
             '購物': { icon: '🛍️', color: '#FDE047', type: 'expense' }, 
-            '日用': { icon: '🧴', color: '#FDE047', type: 'expense' }, 
             '娛樂': { icon: '🎤', color: '#C084FC', type: 'expense' }, 
-            '住宿/學費': { icon: '🏠', color: '#A7F3D0', type: 'expense' }, 
+            '日用': { icon: '🧴', color: '#A7F3D0', type: 'expense' }, 
+            '學習': { icon: '📚', color: '#FDBA74', type: 'expense' }, 
+            '醫療': { icon: '💊', color: '#FDA4AF', type: 'expense' }, 
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
-            // 收入類
             '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
             '退款': { icon: '🧾', color: '#22c55e', type: 'income' }     
         };
 
-        // 🌟 自動生成網格 HTML 的函數
         function renderCategoryGrid() {
             let expenseHtml = '';
             let incomeHtml = '';
-            
             Object.keys(categoryConfig).forEach(cat => {
                 const conf = categoryConfig[cat];
                 const html = `
                     <label class="cursor-pointer group">
-                        <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '午餐' ? 'checked' : ''}>
-                        <div class="p-2 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#92A8D1] peer-checked:text-white transition-all flex flex-col items-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/40">
+                        <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '飲食' ? 'checked' : ''}>
+                        <div class="py-3 px-1 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#92A8D1] peer-checked:text-white transition-all flex flex-col items-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/40">
                             <span class="text-2xl transition-transform peer-checked:scale-110 drop-shadow-sm">${conf.icon}</span>
                             <span class="text-[10px] font-bold text-gray-500 peer-checked:text-white">${cat}</span>
                         </div>
@@ -280,9 +351,17 @@
                 if (conf.type === 'expense') expenseHtml += html;
                 else incomeHtml += html;
             });
-
             document.getElementById('expense-categories').innerHTML = expenseHtml;
             document.getElementById('income-categories').innerHTML = incomeHtml;
+        }
+
+        function changeCalendarCurrency(currency) {
+            calendarDisplayCurrency = currency;
+            document.getElementById('btn-cal-twd').className = currency === 'TWD' ? 'px-2 py-1 rounded bg-white text-[#92A8D1] shadow-sm transition-all' : 'px-2 py-1 text-gray-400 transition-all';
+            document.getElementById('btn-cal-krw').className = currency === 'KRW' ? 'px-2 py-1 rounded bg-white text-[#92A8D1] shadow-sm transition-all' : 'px-2 py-1 text-gray-400 transition-all';
+            const year = myCalendar ? myCalendar.selectedYear : new Date().getFullYear();
+            const monthIndex = myCalendar ? myCalendar.selectedMonth : new Date().getMonth(); 
+            renderCalendarBadgesAndTotal(year, monthIndex);
         }
 
         function openAddModal() { 
@@ -293,11 +372,8 @@
             document.getElementById('amount').value = '';
             document.getElementById('note').value = '';
             document.getElementById('record_date').value = selectedDateStr;
-            
-            // 預設選中「午餐」
-            const defaultRadio = document.querySelector('input[name="category"][value="午餐"]');
+            const defaultRadio = document.querySelector('input[name="category"][value="飲食"]');
             if(defaultRadio) defaultRadio.checked = true;
-
             document.getElementById('modal-input').classList.remove('hidden-view'); 
         }
 
@@ -305,18 +381,13 @@
             currentEditingId = id; 
             const record = allRecords.find(r => String(r.id) === String(id));
             if(!record) return;
-            
             document.getElementById('currency').value = record.currency;
             document.getElementById('amount').value = record.amount;
             document.getElementById('payment_method').value = record.payment_method;
             document.getElementById('record_date').value = record.record_date;
             document.getElementById('note').value = record.note || '';
-            
-            // 設定選中的分類網格
             const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`);
             if(catRadio) catRadio.checked = true;
-            else document.querySelector('input[name="category"][value="其他"]').checked = true; // 防呆
-
             document.getElementById('modal-title').innerText = '編輯紀錄 ✍️';
             document.getElementById('btn-submit').innerText = '儲存修改';
             document.getElementById('btn-delete').classList.remove('hidden-view'); 
@@ -333,14 +404,18 @@
             if(tabName === 'calendar') fetchAndRenderAll();
             if(tabName === 'stats') loadStatsData();
             if(tabName === 'wallet') loadWalletData();
+            if(tabName === 'tools') {
+                // 回到克拉島時重置狀態
+                document.getElementById('search-input').value = ''; 
+                executeSearch();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderCategoryGrid(); // 畫面載入時畫出精美的分類網格
-            
+            renderCategoryGrid(); 
             document.getElementById('record_date').value = selectedDateStr;
             myCalendar = new VanillaCalendar('#calendar', {
-                settings: { lang: 'zh-TW', selection: { day: 'single' } },
+                settings: { lang: 'zh-TW', selection: { day: 'single' }, iso8601: false },
                 actions: {
                     clickDay(event, self) {
                         const target = event.target.closest('[data-calendar-day]');
@@ -348,6 +423,7 @@
                             selectedDateStr = target.dataset.calendarDay;
                             document.getElementById('record_date').value = selectedDateStr;
                             renderDailyDetails(selectedDateStr);
+                            setTimeout(() => { renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth); }, 50);
                         }
                     },
                     changeMonth(event, self) {
@@ -361,36 +437,33 @@
 
         document.getElementById('ledger-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // 🌟 抓取被選中的分類按鈕的值
             const selectedCategory = document.querySelector('input[name="category"]:checked').value;
-
             const record = {
                 currency: document.getElementById('currency').value,
                 amount: Number(document.getElementById('amount').value),
                 payment_method: document.getElementById('payment_method').value,
                 record_date: document.getElementById('record_date').value,
-                category: selectedCategory, // 使用網格選擇的值
+                category: selectedCategory, 
                 note: document.getElementById('note').value,
             };
             record.amount_twd = record.currency === 'KRW' ? Math.round(record.amount * KRW_RATE) : record.amount;
             selectedDateStr = record.record_date; 
-            
             if (currentEditingId) {
                 await db.from('ledger').update(record).eq('id', currentEditingId);
             } else {
                 await db.from('ledger').insert([record]);
             }
-            closeModal(); fetchAndRenderAll(); 
+            closeModal(); fetchAndRenderAll(); closeDrilldownModal(); 
+            if(!document.getElementById('view-tools').classList.contains('hidden-view')) executeSearch();
         });
 
         function deleteRecord() { document.getElementById('delete-modal').classList.remove('hidden-view'); }
         function hideDeleteConfirm() { document.getElementById('delete-modal').classList.add('hidden-view'); }
-        
         async function executeDelete() {
             if(!currentEditingId) return;
             await db.from('ledger').delete().eq('id', currentEditingId);
-            hideDeleteConfirm(); closeModal(); fetchAndRenderAll();
+            hideDeleteConfirm(); closeModal(); fetchAndRenderAll(); closeDrilldownModal();
+            if(!document.getElementById('view-tools').classList.contains('hidden-view')) executeSearch();
         }
 
         async function fetchAndRenderAll() {
@@ -404,49 +477,34 @@
         }
 
         function renderCalendarBadgesAndTotal(year, monthIndex) {
-            let monthExpenseTwd = 0;
-            let monthIncomeTwd = 0;
-            const dateMap = {};
-            const targetYear = String(year);
-            const targetMonth = String(monthIndex + 1).padStart(2, '0');
-
+            let monthExpense = 0; let monthIncome = 0; const dateMap = {};
+            const targetYear = String(year); const targetMonth = String(monthIndex + 1).padStart(2, '0');
             allRecords.forEach(r => {
-                const isInc = incomeCategories.includes(r.category);
-                const [rYear, rMonth] = r.record_date.split('-');
+                const isInc = incomeCategories.includes(r.category); const [rYear, rMonth] = r.record_date.split('-');
+                let valTwd = r.amount_twd; let valKrw = r.currency === 'KRW' ? r.amount : Math.round(r.amount / KRW_RATE);
                 
-                if(rYear === targetYear && rMonth === targetMonth) {
-                    if(isInc) monthIncomeTwd += r.amount_twd;
-                    else monthExpenseTwd += r.amount_twd;
+                if(rYear === targetYear && rMonth === targetMonth) { 
+                    if(isInc) monthIncome += (calendarDisplayCurrency === 'TWD' ? valTwd : valKrw); 
+                    else monthExpense += (calendarDisplayCurrency === 'TWD' ? valTwd : valKrw); 
                 }
-                
                 if (!dateMap[r.record_date]) dateMap[r.record_date] = { net_TWD: 0, net_KRW: 0 };
-                if(isInc) {
-                    dateMap[r.record_date].net_TWD += r.amount_twd;
-                    dateMap[r.record_date].net_KRW += (r.currency === 'KRW' ? r.amount : Math.round(r.amount / KRW_RATE));
-                } else {
-                    dateMap[r.record_date].net_TWD -= r.amount_twd;
-                    dateMap[r.record_date].net_KRW -= (r.currency === 'KRW' ? r.amount : Math.round(r.amount / KRW_RATE));
-                }
+                if(isInc) { dateMap[r.record_date].net_TWD += valTwd; dateMap[r.record_date].net_KRW += valKrw; } 
+                else { dateMap[r.record_date].net_TWD -= valTwd; dateMap[r.record_date].net_KRW -= valKrw; }
             });
 
-            document.getElementById('month-total-expense').innerText = `NT$ ${monthExpenseTwd.toLocaleString()}`;
-            document.getElementById('month-total-income').innerText = `NT$ ${monthIncomeTwd.toLocaleString()}`;
+            const prefix = calendarDisplayCurrency === 'TWD' ? 'NT$' : '₩';
+            document.getElementById('month-total-expense').innerText = `${prefix} ${monthExpense.toLocaleString()}`;
+            document.getElementById('month-total-income').innerText = `${prefix} ${monthIncome.toLocaleString()}`;
             document.querySelectorAll('.day-cost, .day-income').forEach(el => el.remove());
-
+            
             Object.keys(dateMap).forEach(date => {
                 const dayEl = document.querySelector(`[data-calendar-day="${date}"]`);
-                if (dayEl && dateMap[date].net_TWD !== 0) {
-                    const isNetIncome = dateMap[date].net_TWD > 0;
-                    const badge = document.createElement('div');
+                const netVal = calendarDisplayCurrency === 'TWD' ? dateMap[date].net_TWD : dateMap[date].net_KRW;
+                if (dayEl && netVal !== 0) {
+                    const isNetIncome = netVal > 0; const badge = document.createElement('div');
                     badge.className = isNetIncome ? 'day-cost day-income' : 'day-cost';
-                    
-                    const absKrw = Math.abs(dateMap[date].net_KRW);
-                    const absTwd = Math.abs(dateMap[date].net_TWD);
-                    const prefix = isNetIncome ? '+' : '';
-                    
-                    if (absKrw > 0) badge.innerText = `${prefix}₩${absKrw.toLocaleString()}`;
-                    else badge.innerText = `${prefix}$${absTwd.toLocaleString()}`;
-                    
+                    const absVal = Math.abs(netVal); const signPrefix = isNetIncome ? '+' : '';
+                    badge.innerText = `${signPrefix}${absVal.toLocaleString()}`;
                     dayEl.appendChild(badge);
                 }
             });
@@ -455,30 +513,18 @@
         function renderDailyDetails(dateStr) {
             const container = document.getElementById('daily-details-container');
             const dailyRecords = allRecords.filter(r => r.record_date === dateStr);
-            const d = new Date(dateStr);
-            const days = ['日', '一', '二', '三', '四', '五', '六'];
+            const d = new Date(dateStr); const days = ['日', '一', '二', '三', '四', '五', '六'];
             const dateTitle = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
-
             if (dailyRecords.length === 0) {
                 container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold">這天沒有花費紀錄喔！🏝️</div>`;
                 return;
             }
-
-            let dailyExpenseTwd = 0;
-            let dailyIncomeTwd = 0;
-            let listHTML = '';
-
+            let dailyExpenseTwd = 0; let dailyIncomeTwd = 0; let listHTML = '';
             dailyRecords.forEach(r => {
-                const isInc = incomeCategories.includes(r.category);
-                if(isInc) dailyIncomeTwd += r.amount_twd; else dailyExpenseTwd += r.amount_twd;
-                
-                const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' };
-                const noteDisplay = r.note ? r.note : r.category;
+                const isInc = incomeCategories.includes(r.category); if(isInc) dailyIncomeTwd += r.amount_twd; else dailyExpenseTwd += r.amount_twd;
+                const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' }; const noteDisplay = r.note ? r.note : r.category;
                 const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
-                
-                const amountColor = isInc ? 'text-green-500' : 'text-gray-700';
-                const sign = isInc ? '+' : '-';
-
+                const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
                     <div onclick="openEditModal('${r.id}')" class="cursor-pointer bg-white rounded-[20px] shadow-sm border border-gray-100 p-4 flex items-center justify-between mb-3 transition-transform active:scale-95 hover:border-[#92A8D1]/30">
                         <div class="flex items-center gap-4">
@@ -487,18 +533,14 @@
                         </div>
                         <div class="text-right">
                             <div class="font-black ${amountColor} text-base mb-0.5">${sign}${displayAmt}</div>
-                            <div class="text-[10px] font-bold text-gray-500 bg-gray-100 inline-block px-2 py-0.5 rounded-sm">${r.payment_method}</div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase bg-gray-100 inline-block px-2 py-0.5 rounded-sm">${r.payment_method}</div>
                         </div>
                     </div>`;
             });
-
             container.innerHTML = `<div class="flex justify-between items-center px-4 mb-3"><div class="font-black text-gray-800 text-sm">${dateTitle}</div><div class="font-bold text-gray-500 text-xs">支出: NT$${dailyExpenseTwd.toLocaleString()} | 收入: NT$${dailyIncomeTwd.toLocaleString()}</div></div>` + listHTML;
         }
 
-        let currentStatsDate = new Date();
-        let myDonutChart = null; 
-        let displayCurrency = 'TWD'; 
-
+        let currentStatsDate = new Date(); let myDonutChart = null; let displayCurrency = 'TWD'; 
         function changeStatsMonth(delta) { currentStatsDate.setMonth(currentStatsDate.getMonth() + delta); loadStatsData(); }
         function changeStatsCurrency(currency) {
             displayCurrency = currency;
@@ -508,41 +550,41 @@
         }
 
         async function loadStatsData() {
-            const year = currentStatsDate.getFullYear();
-            const month = String(currentStatsDate.getMonth() + 1).padStart(2, '0');
+            const year = currentStatsDate.getFullYear(); const month = String(currentStatsDate.getMonth() + 1).padStart(2, '0');
             document.getElementById('stats-month-label').innerText = `${year} / ${month}`;
-            const startDate = `${year}-${month}-01`;
-            const endDate = new Date(year, currentStatsDate.getMonth() + 1, 0).toISOString().split('T')[0];
-
+            const startDate = `${year}-${month}-01`; const endDate = new Date(year, currentStatsDate.getMonth() + 1, 0).toISOString().split('T')[0];
             const { data } = await db.from('ledger').select('*').gte('record_date', startDate).lte('record_date', endDate);
             
             let totalExpense = 0; const sums = {};
-            
             data.filter(item => !incomeCategories.includes(item.category)).forEach(item => {
                 let valToAdd = displayCurrency === 'TWD' ? item.amount_twd : (item.currency === 'KRW' ? item.amount : Math.round(item.amount / KRW_RATE));
-                totalExpense += valToAdd;
-                sums[item.category] = (sums[item.category] || 0) + valToAdd;
+                totalExpense += valToAdd; sums[item.category] = (sums[item.category] || 0) + valToAdd;
             });
-
             const prefix = displayCurrency === 'TWD' ? 'NT$' : '₩';
             document.getElementById('stats-total-text').innerText = totalExpense.toLocaleString();
-
             const sortedCategories = Object.keys(sums).sort((a, b) => sums[b] - sums[a]);
-            const labels = []; const values = []; const bgColors = [];
-            let listHTML = '';
+            const labels = []; const values = []; const bgColors = []; let listHTML = '';
 
             sortedCategories.forEach(cat => {
-                const val = sums[cat];
-                const percentage = totalExpense > 0 ? Math.round((val / totalExpense) * 100) : 0;
+                const val = sums[cat]; const percentage = totalExpense > 0 ? Math.round((val / totalExpense) * 100) : 0;
                 const conf = categoryConfig[cat] || { icon: '📝', color: '#000' };
                 labels.push(cat); values.push(val); bgColors.push(conf.color);
-                listHTML += `<div class="bg-white rounded-[16px] shadow-sm border border-gray-50 flex items-center justify-between p-3 mb-2"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div><span class="font-black text-gray-700 text-sm">${cat}</span></div><div class="flex items-center gap-4"><span class="text-xs font-bold text-gray-400 w-8 text-right">${percentage}%</span><span class="font-black text-gray-800 text-sm w-20 text-right">${prefix}${val.toLocaleString()}</span></div></div>`;
+                
+                listHTML += `
+                <div onclick="openCategoryDetailsModal('${cat}')" class="cursor-pointer bg-white rounded-[16px] shadow-sm border border-gray-50 flex items-center justify-between p-3 mb-2 transition-all hover:border-[#92A8D1]/30 active:scale-98">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                        <span class="font-black text-gray-700 text-sm">${cat}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-xs font-bold text-gray-400 w-8 text-right">${percentage}%</span>
+                        <span class="font-black text-gray-800 text-sm w-20 text-right">${prefix}${val.toLocaleString()}</span>
+                    </div>
+                </div>`;
             });
-
             if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold">這個月還沒有支出紀錄喔！</div>`;
             document.getElementById('stats-list').innerHTML = listHTML;
-
-            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC'];
+            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC', '#FDBA74', '#FDA4AF'];
             const ctx = document.getElementById('myDonutChart').getContext('2d');
             if (myDonutChart) myDonutChart.destroy(); 
             myDonutChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values.length > 0 ? values : [1], backgroundColor: values.length > 0 ? svtChartColors : ['#f3f4f6'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { if(totalExpense === 0) return ' 無資料'; return ` ${prefix}${context.parsed.toLocaleString()}`; } } } } } });
@@ -552,34 +594,134 @@
         function changeWalletMonth(delta) { currentWalletDate.setMonth(currentWalletDate.getMonth() + delta); loadWalletData(); }
 
         async function loadWalletData() {
-            const year = currentWalletDate.getFullYear();
-            const month = String(currentWalletDate.getMonth() + 1).padStart(2, '0');
+            const year = currentWalletDate.getFullYear(); const month = String(currentWalletDate.getMonth() + 1).padStart(2, '0');
             document.getElementById('wallet-month-label').innerText = `${year} / ${month}`;
-            const startDate = `${year}-${month}-01`;
-            const endDate = new Date(year, currentWalletDate.getMonth() + 1, 0).toISOString().split('T')[0];
-
+            const startDate = `${year}-${month}-01`; const endDate = new Date(year, currentWalletDate.getMonth() + 1, 0).toISOString().split('T')[0];
             const { data } = await db.from('ledger').select('*').gte('record_date', startDate).lte('record_date', endDate);
             
-            const paySums = {};
-            let totalTwd = 0;
-
+            const paySums = {}; let totalTwd = 0;
             data.filter(item => !incomeCategories.includes(item.category)).forEach(item => {
                 const method = item.payment_method || '未分類';
-                paySums[method] = (paySums[method] || 0) + item.amount_twd;
-                totalTwd += item.amount_twd;
+                paySums[method] = (paySums[method] || 0) + item.amount_twd; totalTwd += item.amount_twd;
             });
-
             let listHTML = '';
             Object.keys(paySums).sort((a, b) => paySums[b] - paySums[a]).forEach(method => {
                 listHTML += `
-                <div class="bg-white rounded-[16px] shadow-sm border border-gray-100 flex items-center justify-between p-4 mb-3 transition-colors hover:border-[#92A8D1]/30">
+                <div onclick="openWalletDetailsModal('${method}')" class="cursor-pointer bg-white rounded-[16px] shadow-sm border border-gray-100 flex items-center justify-between p-4 mb-3 transition-all hover:border-[#92A8D1]/30 active:scale-98">
                     <span class="font-bold text-gray-700 text-sm">${method}</span>
                     <span class="font-black text-[#92A8D1] text-base">NT$ ${paySums[method].toLocaleString()}</span>
                 </div>`;
             });
-
             if (totalTwd === 0) listHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">這個月還沒有花費喔！</div>`;
             document.getElementById('wallet-list').innerHTML = listHTML;
+        }
+
+        function openCategoryDetailsModal(cat) {
+            const year = currentStatsDate.getFullYear(); const month = String(currentStatsDate.getMonth() + 1).padStart(2, '0');
+            const targetPrefix = `${year}-${month}`;
+            const records = allRecords.filter(r => r.record_date.startsWith(targetPrefix) && r.category === cat && !incomeCategories.includes(r.category));
+            renderDrilldownList(`🍽️ ${cat} · 當月明細總覽`, records);
+        }
+
+        function openWalletDetailsModal(method) {
+            const year = currentWalletDate.getFullYear(); const month = String(currentWalletDate.getMonth() + 1).padStart(2, '0');
+            const targetPrefix = `${year}-${month}`;
+            const records = allRecords.filter(r => r.record_date.startsWith(targetPrefix) && r.payment_method === method && !incomeCategories.includes(r.category));
+            renderDrilldownList(`💳 ${method} · 當月刷卡明細`, records);
+        }
+
+        function renderDrilldownList(title, records) {
+            document.getElementById('drilldown-title').innerText = title;
+            const container = document.getElementById('drilldown-list');
+            records.sort((a, b) => {
+                const dateA = new Date(a.record_date).getTime(); const dateB = new Date(b.record_date).getTime();
+                if (dateA !== dateB) return dateB - dateA; return b.id - a.id; 
+            });
+            if (records.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-12 font-bold text-sm">這個月此項目沒有任何紀錄喔！</div>`;
+            } else {
+                let html = '';
+                records.forEach(r => {
+                    const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' };
+                    const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+                    const d = new Date(r.record_date); const days = ['日', '一', '二', '三', '四', '五', '六'];
+                    const dateDisplay = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
+                    const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
+                    html += `
+                        <div onclick="openEditModal('${r.id}')" class="cursor-pointer bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 active:scale-95 transition-all">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-black text-gray-700 text-sm">-${displayAmt}</div>
+                                <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
+                            </div>
+                        </div>`;
+                });
+                container.innerHTML = html;
+            }
+            document.getElementById('modal-drilldown').classList.remove('hidden-view');
+        }
+
+        function closeDrilldownModal() { document.getElementById('modal-drilldown').classList.add('hidden-view'); }
+
+        // ==================== 🌟 搜尋與百寶箱切換邏輯 ====================
+        function executeSearch() {
+            const keyword = document.getElementById('search-input').value.toLowerCase().trim();
+            const container = document.getElementById('search-results-list');
+            const toolsMenu = document.getElementById('tools-menu');
+            
+            // 如果沒輸入字：顯示克拉百寶箱，隱藏搜尋結果
+            if (!keyword) {
+                container.classList.add('hidden-view');
+                toolsMenu.classList.remove('hidden-view');
+                return;
+            }
+
+            // 只要一打字：隱藏百寶箱，開始顯示搜尋結果
+            toolsMenu.classList.add('hidden-view');
+            container.classList.remove('hidden-view');
+
+            const results = allRecords.filter(r => 
+                (r.note && r.note.toLowerCase().includes(keyword)) ||
+                (r.category && r.category.toLowerCase().includes(keyword)) ||
+                (r.payment_method && r.payment_method.toLowerCase().includes(keyword))
+            );
+
+            results.sort((a, b) => {
+                const dateA = new Date(a.record_date).getTime(); const dateB = new Date(b.record_date).getTime();
+                if (dateA !== dateB) return dateB - dateA; return b.id - a.id; 
+            });
+
+            if (results.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">找不到相關紀錄 🥲 勝哲說不能亂花錢！</div>`;
+                return;
+            }
+
+            let html = `<div class="text-xs font-black text-gray-400 mb-3 px-1">💎 找到 ${results.length} 筆紀錄</div>`;
+            results.forEach(r => {
+                const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' };
+                const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+                const isInc = incomeCategories.includes(r.category);
+                const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
+                const d = new Date(r.record_date); const days = ['日', '一', '二', '三', '四', '五', '六'];
+                const dateDisplay = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
+                const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
+
+                html += `
+                    <div onclick="openEditModal('${r.id}')" class="cursor-pointer bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 active:scale-95 transition-all mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                            <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-black ${amountColor} text-sm">${sign}${displayAmt}</div>
+                            <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
         }
     </script>
 </body>
