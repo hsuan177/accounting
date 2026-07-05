@@ -2,7 +2,6 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- 🌟 修改 1：鎖死縮放比例，禁止使用者兩指放大或雙擊放大 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🍒 S.COUPS BANK</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,9 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* 🌟 修改 2：加上 touch-action: manipulation，徹底根除雙擊放大的預設行為 */
         body { touch-action: manipulation; }
-        
         .hidden-view { display: none !important; }
         
         .vc-day { min-height: 65px !important; position: relative; padding-top: 4px; }
@@ -40,14 +37,16 @@
             pointer-events: none; 
             box-shadow: 0 2px 4px rgba(146, 168, 209, 0.3);
         }
-
         .day-income {
             background: linear-gradient(to right, #4ade80, #22c55e);
             box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
         }
-
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* 隱藏捲軸但可滾動 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans pb-32 relative selection:bg-[#F7CAC9] selection:text-white">
@@ -74,7 +73,6 @@
                     </div>
                 </div>
             </div>
-
             <div id="daily-details-container" class="space-y-3 pb-6"></div>
         </main>
 
@@ -85,14 +83,12 @@
                     <h2 id="stats-month-label" class="text-lg font-bold text-gray-800">2026 / 07</h2>
                     <button onclick="changeStatsMonth(1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&gt;</button>
                 </div>
-
                 <div class="flex justify-center mb-6">
                     <div class="bg-gray-100 p-1 rounded-lg flex text-sm font-bold shadow-inner">
                         <button id="btn-stats-twd" onclick="changeStatsCurrency('TWD')" class="px-5 py-1.5 rounded-md bg-white text-[#92A8D1] shadow transition-all">台幣 NT$</button>
                         <button id="btn-stats-krw" onclick="changeStatsCurrency('KRW')" class="px-5 py-1.5 rounded-md text-gray-400 transition-all">韓元 ₩</button>
                     </div>
                 </div>
-
                 <div class="relative w-52 h-52 mx-auto mb-6">
                     <canvas id="myDonutChart" class="absolute inset-0 z-10"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 mt-2">
@@ -100,7 +96,6 @@
                         <div id="stats-total-text" class="text-xl font-black text-gray-800">0</div>
                     </div>
                 </div>
-
                 <div id="stats-list" class="space-y-3 mt-4 border-t pt-4"></div>
             </div>
         </main>
@@ -112,9 +107,7 @@
                     <h2 id="wallet-month-label" class="text-lg font-bold text-gray-800">2026 / 07</h2>
                     <button onclick="changeWalletMonth(1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&gt;</button>
                 </div>
-                
                 <h3 class="text-xs font-black text-gray-400 mb-4 uppercase tracking-wider px-1">本月各付款方式總額</h3>
-                
                 <div id="wallet-list" class="space-y-3"></div>
             </div>
         </main>
@@ -127,14 +120,16 @@
             </div>
         </main>
 
+        <!-- ==================== 🌟 大幅更新的記帳彈出視窗 ==================== -->
         <div id="modal-input" class="fixed inset-0 z-[60] flex flex-col justify-end hidden-view">
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
             
-            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[85vh] overflow-y-auto animate-slide-up">
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar">
                 <button onclick="closeModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
-                <h2 id="modal-title" class="text-lg font-black text-gray-800 mb-5 ml-1">新增一筆紀錄 💸</h2>
+                <h2 id="modal-title" class="text-lg font-black text-gray-800 mb-5 ml-1">新增紀錄 💸</h2>
                 
                 <form id="ledger-form" class="space-y-4">
+                    <!-- 第一列：金額 -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 focus-within:border-[#92A8D1] transition-colors">
                         <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">金額</label>
                         <div class="flex items-center">
@@ -142,51 +137,52 @@
                                 <option value="KRW">₩ KRW</option>
                                 <option value="TWD">$ TWD</option>
                             </select>
-                            <!-- 🌟 修改 3：加上 inputmode="decimal" 呼叫純數字鍵盤 -->
                             <input type="number" id="amount" inputmode="decimal" placeholder="0" required 
                                 class="flex-1 w-full text-3xl font-black text-[#92A8D1] outline-none bg-transparent placeholder-gray-300">
                         </div>
                     </div>
 
+                    <!-- 第二列：日期 (左) + 付款方式 (右) -->
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">分類 🌟</label>
-                            <select id="category" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
-                                <optgroup label="💸 支出">
-                                    <option value="餐費">🍚 飲食餐費</option>
-                                    <option value="交通">🚇 交通地鐵</option>
-                                    <option value="購物">🛍️ 購物娛樂</option>
-                                    <option value="住宿/學費">🏠 住宿學費</option>
-                                    <option value="其他">🪙 其他支出</option>
-                                </optgroup>
-                                <optgroup label="💰 收入">
-                                    <option value="生活費">💌 匯款/生活費</option>
-                                    <option value="退款">🧾 退稅/退款</option>
-                                </optgroup>
-                            </select>
-                        </div>
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">日期</label>
                             <input type="date" id="record_date" required class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
                         </div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                            <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">付款/入帳</label>
+                            <select id="payment_method" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
+                                <optgroup label="信用卡">
+                                    <option value="CUBE卡">💳 CUBE卡</option>
+                                    <option value="富邦J卡">💳 富邦J卡</option>
+                                    <option value="UNIOPEN卡">💳 UNIOPEN卡</option>
+                                    <option value="韓國卡">🇰🇷 韓國卡</option>
+                                </optgroup>
+                                <optgroup label="現金與支付">
+                                    <option value="現金">💵 現金</option>
+                                    <option value="帳戶扣款">🏦 銀行帳戶</option>
+                                </optgroup>
+                            </select>
+                        </div>
                     </div>
 
+                    <!-- 第三列：🌟 全新網格化分類 (超精緻) -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">付款/入帳方式</label>
-                        <select id="payment_method" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
-                            <optgroup label="信用卡">
-                                <option value="CUBE卡">💳 CUBE卡</option>
-                                <option value="富邦J卡">💳 富邦J卡</option>
-                                <option value="UNIOPEN卡">💳 UNIOPEN卡</option>
-                                <option value="韓國卡">🇰🇷 韓國卡</option>
-                            </optgroup>
-                            <optgroup label="現金與支付">
-                                <option value="現金">💵 現金</option>
-                                <option value="帳戶扣款">🏦 銀行帳戶</option>
-                            </optgroup>
-                        </select>
+                        <label class="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">選擇分類</label>
+                        
+                        <!-- 支出區塊 -->
+                        <div class="grid grid-cols-4 gap-3 mb-4" id="expense-categories">
+                            <!-- JS 動態生成 -->
+                        </div>
+
+                        <!-- 收入區塊 -->
+                        <div class="border-t border-dashed border-gray-200 pt-3">
+                            <div class="grid grid-cols-4 gap-3" id="income-categories">
+                                <!-- JS 動態生成 -->
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- 第四列：備註 -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 focus-within:border-[#F7CAC9] transition-colors">
                         <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">備註</label>
                         <input type="text" id="note" placeholder="寫點什麼..." class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent placeholder-gray-300">
@@ -244,26 +240,64 @@
         let currentEditingId = null;
         let myCalendar = null; 
 
+        // 🌟 更新的精細分類 (完美解決分支太長的問題)
         const incomeCategories = ['生活費', '退款'];
-
+        
         const categoryConfig = {
-            '餐費': { icon: '🍚', color: '#F7CAC9' }, 
-            '交通': { icon: '🚇', color: '#92A8D1' }, 
-            '購物': { icon: '🛍️', color: '#FDE047' }, 
-            '住宿/學費': { icon: '🏠', color: '#A7F3D0' }, 
-            '其他': { icon: '🪙', color: '#E5E7EB' },
-            '生活費': { icon: '💌', color: '#4ade80' }, 
-            '退款': { icon: '🧾', color: '#22c55e' }     
+            // 支出類
+            '早餐': { icon: '🥞', color: '#F7CAC9', type: 'expense' }, 
+            '午餐': { icon: '🍱', color: '#F7CAC9', type: 'expense' }, 
+            '晚餐': { icon: '🥩', color: '#F7CAC9', type: 'expense' }, 
+            '點心': { icon: '🍰', color: '#F7CAC9', type: 'expense' }, 
+            '飲料': { icon: '🧋', color: '#F7CAC9', type: 'expense' },
+            '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
+            '購物': { icon: '🛍️', color: '#FDE047', type: 'expense' }, 
+            '日用': { icon: '🧴', color: '#FDE047', type: 'expense' }, 
+            '娛樂': { icon: '🎤', color: '#C084FC', type: 'expense' }, 
+            '住宿/學費': { icon: '🏠', color: '#A7F3D0', type: 'expense' }, 
+            '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
+            // 收入類
+            '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
+            '退款': { icon: '🧾', color: '#22c55e', type: 'income' }     
         };
+
+        // 🌟 自動生成網格 HTML 的函數
+        function renderCategoryGrid() {
+            let expenseHtml = '';
+            let incomeHtml = '';
+            
+            Object.keys(categoryConfig).forEach(cat => {
+                const conf = categoryConfig[cat];
+                const html = `
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '午餐' ? 'checked' : ''}>
+                        <div class="p-2 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#92A8D1] peer-checked:text-white transition-all flex flex-col items-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/40">
+                            <span class="text-2xl transition-transform peer-checked:scale-110 drop-shadow-sm">${conf.icon}</span>
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-white">${cat}</span>
+                        </div>
+                    </label>
+                `;
+                if (conf.type === 'expense') expenseHtml += html;
+                else incomeHtml += html;
+            });
+
+            document.getElementById('expense-categories').innerHTML = expenseHtml;
+            document.getElementById('income-categories').innerHTML = incomeHtml;
+        }
 
         function openAddModal() { 
             currentEditingId = null; 
-            document.getElementById('modal-title').innerText = '新增一筆紀錄 💸';
+            document.getElementById('modal-title').innerText = '新增紀錄 💸';
             document.getElementById('btn-submit').innerText = '儲存';
             document.getElementById('btn-delete').classList.add('hidden-view'); 
             document.getElementById('amount').value = '';
             document.getElementById('note').value = '';
             document.getElementById('record_date').value = selectedDateStr;
+            
+            // 預設選中「午餐」
+            const defaultRadio = document.querySelector('input[name="category"][value="午餐"]');
+            if(defaultRadio) defaultRadio.checked = true;
+
             document.getElementById('modal-input').classList.remove('hidden-view'); 
         }
 
@@ -271,12 +305,18 @@
             currentEditingId = id; 
             const record = allRecords.find(r => String(r.id) === String(id));
             if(!record) return;
+            
             document.getElementById('currency').value = record.currency;
             document.getElementById('amount').value = record.amount;
             document.getElementById('payment_method').value = record.payment_method;
             document.getElementById('record_date').value = record.record_date;
-            document.getElementById('category').value = record.category;
             document.getElementById('note').value = record.note || '';
+            
+            // 設定選中的分類網格
+            const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`);
+            if(catRadio) catRadio.checked = true;
+            else document.querySelector('input[name="category"][value="其他"]').checked = true; // 防呆
+
             document.getElementById('modal-title').innerText = '編輯紀錄 ✍️';
             document.getElementById('btn-submit').innerText = '儲存修改';
             document.getElementById('btn-delete').classList.remove('hidden-view'); 
@@ -296,6 +336,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryGrid(); // 畫面載入時畫出精美的分類網格
+            
             document.getElementById('record_date').value = selectedDateStr;
             myCalendar = new VanillaCalendar('#calendar', {
                 settings: { lang: 'zh-TW', selection: { day: 'single' } },
@@ -319,12 +361,16 @@
 
         document.getElementById('ledger-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // 🌟 抓取被選中的分類按鈕的值
+            const selectedCategory = document.querySelector('input[name="category"]:checked').value;
+
             const record = {
                 currency: document.getElementById('currency').value,
                 amount: Number(document.getElementById('amount').value),
                 payment_method: document.getElementById('payment_method').value,
                 record_date: document.getElementById('record_date').value,
-                category: document.getElementById('category').value,
+                category: selectedCategory, // 使用網格選擇的值
                 note: document.getElementById('note').value,
             };
             record.amount_twd = record.currency === 'KRW' ? Math.round(record.amount * KRW_RATE) : record.amount;
@@ -496,7 +542,7 @@
             if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold">這個月還沒有支出紀錄喔！</div>`;
             document.getElementById('stats-list').innerHTML = listHTML;
 
-            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB'];
+            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC'];
             const ctx = document.getElementById('myDonutChart').getContext('2d');
             if (myDonutChart) myDonutChart.destroy(); 
             myDonutChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values.length > 0 ? values : [1], backgroundColor: values.length > 0 ? svtChartColors : ['#f3f4f6'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { if(totalExpense === 0) return ' 無資料'; return ` ${prefix}${context.parsed.toLocaleString()}`; } } } } } });
