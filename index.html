@@ -11,57 +11,37 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { touch-action: manipulation; }
+        html, body { height: 100%; background-color: #f9fafb; touch-action: manipulation; overflow-x: hidden; }
         .hidden-view { display: none !important; }
         
         .vc-day { min-height: 65px !important; position: relative; padding-top: 4px; }
         .vanilla-calendar-day__btn { align-items: flex-start !important; justify-content: center !important; }
+        .vanilla-calendar-day__btn_selected { background-color: #92A8D1 !important; color: white !important; box-shadow: 0 4px 10px rgba(146, 168, 209, 0.4) !important; }
+        .vanilla-calendar-day__btn_today { color: #F7CAC9 !important; background-color: #FFF0F0 !important; }
         
-        .vanilla-calendar-day__btn_selected {
-            background-color: #92A8D1 !important;
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(146, 168, 209, 0.4) !important;
-        }
-        .vanilla-calendar-day__btn_today {
-            color: #F7CAC9 !important;
-            background-color: #FFF0F0 !important;
-        }
-        
+        /* 🌟 完美契合的克拉島日曆標籤色 */
         .day-cost { 
-            position: absolute; 
-            bottom: 4px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            font-size: 8.5px; 
-            letter-spacing: -0.3px;
-            color: white; 
-            font-weight: bold; 
-            background: linear-gradient(to right, #92A8D1, #F7CAC9);
-            border-radius: 4px; 
-            padding: 1px 3px; 
-            text-align: center; 
-            width: 90%; 
-            line-height: 1.1; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            pointer-events: none; 
-            box-shadow: 0 2px 4px rgba(146, 168, 209, 0.3);
+            position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 8.5px; letter-spacing: -0.3px; font-weight: bold; 
+            background: #F7CAC9; /* 支出：石英粉 */
+            color: #4B5563; /* 深灰字體確保高對比度易讀 */
+            border-radius: 4px; padding: 1px 3px; text-align: center; width: 90%; line-height: 1.1; white-space: nowrap; overflow: hidden; pointer-events: none; 
+            box-shadow: 0 2px 4px rgba(247, 202, 201, 0.4);
         }
-        .day-income {
-            background: linear-gradient(to right, #4ade80, #22c55e);
-            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+        .day-income { 
+            background: #92A8D1; /* 收入：寧靜藍 */
+            color: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(146, 168, 209, 0.4);
         }
+
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans pb-32 relative selection:bg-[#F7CAC9] selection:text-white">
+<body class="text-gray-800 font-sans selection:bg-[#F7CAC9] selection:text-white pb-40">
 
-    <div class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-lg relative overflow-x-hidden">
+    <div class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-lg relative">
         
         <header class="bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] text-white p-5 text-center sticky top-0 z-40 shadow-md rounded-b-3xl border-b-4 border-white/30">
             <h1 class="text-2xl font-black tracking-widest drop-shadow-md flex justify-center items-center gap-2">
@@ -72,14 +52,12 @@
         <main id="view-calendar" class="p-4">
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-3 mb-4">
                 <div id="calendar" class="w-full mb-1"></div>
-                
                 <div class="flex justify-end px-2 mb-2">
                     <div class="bg-gray-100 p-0.5 rounded-md flex text-[10px] font-bold">
                         <button id="btn-cal-twd" onclick="changeCalendarCurrency('TWD')" class="px-2 py-1 rounded bg-white text-[#92A8D1] shadow-sm transition-all">NT$</button>
                         <button id="btn-cal-krw" onclick="changeCalendarCurrency('KRW')" class="px-2 py-1 text-gray-400 transition-all">₩</button>
                     </div>
                 </div>
-
                 <div class="flex justify-around items-center text-sm pt-3 border-t border-gray-100">
                     <div class="text-center w-1/2 border-r border-gray-100">
                         <div class="text-[10px] text-gray-400 font-bold tracking-wider mb-1">本月總支出</div>
@@ -91,10 +69,21 @@
                     </div>
                 </div>
             </div>
-            <div id="daily-details-container" class="space-y-3 pb-6"></div>
+            <div id="daily-details-container" class="space-y-3 pb-6 overflow-hidden"></div>
         </main>
 
         <main id="view-stats" class="p-4 hidden-view">
+            <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 mb-4">
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-wider">🎯 本月預算狀態</h3>
+                    <span class="text-[10px] font-bold text-gray-500">NT$ <span id="budget-text">0 / 20,000</span></span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-3.5 mb-1 overflow-hidden">
+                    <div id="budget-bar" class="h-full rounded-full transition-all duration-700 w-0 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]"></div>
+                </div>
+                <div class="text-[9px] text-right font-black text-gray-400" id="budget-percentage">0%</div>
+            </div>
+
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
                 <div class="flex justify-between items-center mb-4">
                     <button onclick="changeStatsMonth(-1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&lt;</button>
@@ -130,70 +119,47 @@
             </div>
         </main>
 
-        <!-- ==================== 🌟 全新複合式：克拉島 (搜尋 + 百寶箱) ==================== -->
         <main id="view-tools" class="p-4 hidden-view">
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 min-h-[70vh]">
                 <h2 class="text-lg font-black text-gray-800 mb-4 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] bg-clip-text text-transparent flex items-center gap-2">
                     <span>💎</span> 歡迎來到克拉島
                 </h2>
                 
-                <!-- 搜尋框 -->
                 <div class="relative mb-6">
                     <input type="text" id="search-input" oninput="executeSearch()" placeholder="搜尋備註、分類或卡片..." class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-3 px-4 pl-10 font-bold text-sm text-gray-700 outline-none focus:border-[#92A8D1] transition-colors">
                     <span class="absolute left-4 top-3.5 text-gray-400">🔍</span>
                 </div>
-                
-                <!-- 搜尋結果區 (打字時才會出現) -->
-                <div id="search-results-list" class="space-y-3 pb-6 hidden-view"></div>
+                <div id="search-results-list" class="space-y-3 pb-6 hidden-view overflow-hidden"></div>
 
-                <!-- 🌟 克拉專屬百寶箱選單 (沒打字時顯示) -->
                 <div id="tools-menu" class="space-y-3">
                     <h3 class="text-xs font-black text-gray-400 mb-2 mt-4 uppercase tracking-wider px-1">克拉必備小工具</h3>
                     
-                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#FFF0F0] transition-colors active:scale-95">
+                    <div onclick="window.open('https://forms.gle/CizB4A9W6t6Wn4sq8', '_blank')" class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#F7CAC9]/20 transition-colors active:scale-95 border border-dashed border-gray-300">
                         <div class="flex items-center gap-3">
-                            <span class="text-2xl drop-shadow-sm">🍒</span>
-                            <span class="font-bold text-gray-700">勝哲的周邊預算池</span>
+                            <span class="text-2xl drop-shadow-sm">📝</span>
+                            <span class="font-bold text-gray-700">追星周邊總庫</span>
                         </div>
-                        <span class="text-gray-400 font-bold text-[10px] bg-gray-200 px-2 py-1 rounded-full">開發中</span>
+                        <span class="text-[#92A8D1] font-bold text-sm">前往 &raquo;</span>
                     </div>
 
-                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#F0F4FF] transition-colors active:scale-95">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl drop-shadow-sm">🎫</span>
-                            <span class="font-bold text-gray-700">首爾場搶票小金庫</span>
-                        </div>
-                        <span class="text-gray-400 font-bold text-[10px] bg-gray-200 px-2 py-1 rounded-full">開發中</span>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors active:scale-95">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl drop-shadow-sm">☕</span>
-                            <span class="font-bold text-gray-700">聖水洞踩點清單</span>
-                        </div>
-                        <span class="text-gray-400 font-bold text-[10px] bg-gray-200 px-2 py-1 rounded-full">開發中</span>
-                    </div>
-
-                    <!-- 把這段貼到 view-tools 的 list 裡面 -->
-<div onclick="window.open('https://forms.gle/CizB4A9W6t6Wn4sq8', '_blank')" class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#F7CAC9]/20 transition-colors active:scale-95 border border-dashed border-gray-300">
-    <div class="flex items-center gap-3">
-        <span class="text-2xl drop-shadow-sm">📝</span>
-        <span class="font-bold text-gray-700">追星周邊表單</span>
-    </div>
-    <span class="text-[#92A8D1] font-bold text-sm">前往 &raquo;</span>
-</div>
-
-                    <h3 class="text-xs font-black text-gray-400 mb-2 mt-6 uppercase tracking-wider px-1">系統設定</h3>
+                    <h3 class="text-xs font-black text-gray-400 mb-2 mt-6 uppercase tracking-wider px-1">系統設定 (自動儲存)</h3>
                     
-                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors active:scale-95">
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <span class="text-xl">⚙️</span>
-                            <span class="font-bold text-gray-600 text-sm">設定與資料備份</span>
+                            <span class="text-xl">💰</span>
+                            <span class="font-bold text-gray-600 text-sm">每月預算 (NT$)</span>
                         </div>
-                        <span class="text-gray-400 font-bold text-lg">&rsaquo;</span>
+                        <input type="number" id="budget-input" onchange="saveBudget()" placeholder="20000" class="w-24 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-right text-sm font-bold outline-none focus:border-[#92A8D1]">
+                    </div>
+
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">💱</span>
+                            <span class="font-bold text-gray-600 text-sm">韓元即時匯率</span>
+                        </div>
+                        <span id="live-rate-display" class="text-[10px] font-bold text-[#92A8D1] bg-[#92A8D1]/10 px-2 py-1 rounded">連線中...</span>
                     </div>
                 </div>
-
             </div>
         </main>
 
@@ -232,8 +198,10 @@
                                     <option value="UNIOPEN卡">💳 UNIOPEN卡</option>
                                     <option value="韓國卡">🇰🇷 韓國卡</option>
                                 </optgroup>
-                                <optgroup label="現金與支付">
+                                <!-- 🌟 新增 LINE PAY -->
+                                <optgroup label="現金與行動支付">
                                     <option value="現金">💵 現金</option>
+                                    <option value="LINE PAY">🟢 LINE PAY</option>
                                     <option value="帳戶扣款">🏦 銀行帳戶</option>
                                 </optgroup>
                             </select>
@@ -267,15 +235,15 @@
                 <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
                 <button onclick="closeDrilldownModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
                 <h2 id="drilldown-title" class="text-lg font-black text-gray-800 mb-5 ml-1 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] bg-clip-text text-transparent">明細總覽</h2>
-                <div id="drilldown-list" class="space-y-3 pb-6"></div>
+                <div id="drilldown-list" class="space-y-3 pb-6 overflow-hidden"></div>
             </div>
         </div>
 
-        <button onclick="openAddModal()" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_8px_25px_rgba(146,168,209,0.5)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
+        <button onclick="openAddModal()" class="fixed bottom-28 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_8px_25px_rgba(146,168,209,0.5)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
             <span class="text-3xl font-black mb-1">+</span>
         </button>
 
-        <nav class="fixed bottom-0 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-gray-100 flex justify-between items-center px-4 py-2 z-40">
+        <nav class="fixed bottom-0 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-gray-100 flex justify-between items-center px-4 pt-2 pb-6 z-40">
             <button onclick="switchTab('calendar')" id="tab-calendar" class="flex flex-col items-center p-2 text-[#92A8D1] transition-colors w-1/4">
                 <span class="text-xl mb-1">📅</span><span class="text-[10px] font-bold">記帳本</span>
             </button>
@@ -307,8 +275,22 @@
         const SUPABASE_URL = 'https://nzfarouccowfgytpmnlp.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56ZmFyb3VjY293Zmd5dHBtbmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyMjkyMTEsImV4cCI6MjA5ODgwNTIxMX0.k49Zn7tGNGMKyrG91QpaCYRM4T848ORx0L9ROh_CqNI';
         const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const KRW_RATE = 0.024; 
         
+        let KRW_RATE = 0.024; 
+        
+        async function fetchLiveExchangeRate() {
+            try {
+                const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/krw.json');
+                const data = await res.json();
+                if (data && data.krw && data.krw.twd) {
+                    KRW_RATE = data.krw.twd;
+                    document.getElementById('live-rate-display').innerHTML = `1 韓元 = <b>${KRW_RATE.toFixed(4)}</b> 台幣 (即時)`;
+                }
+            } catch(e) {
+                document.getElementById('live-rate-display').innerText = `1 韓元 = 0.0240 台幣 (離線預設)`;
+            }
+        }
+
         function getLocalDateStr(date = new Date()) {
             const tzOffset = date.getTimezoneOffset() * 60000;
             return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
@@ -320,78 +302,134 @@
         let myCalendar = null; 
         let calendarDisplayCurrency = 'TWD'; 
 
-        const incomeCategories = ['生活費', '退款'];
+        const incomeCategories = ['生活費', '薪資', '退款', '其他收入'];
+        
         const categoryConfig = {
             '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
+            '飲料': { icon: '🧋', color: '#FBCFE8', type: 'expense' },
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
-            '購物': { icon: '🛍️', color: '#FDE047', type: 'expense' }, 
-            '娛樂': { icon: '🎤', color: '#C084FC', type: 'expense' }, 
             '日用': { icon: '🧴', color: '#A7F3D0', type: 'expense' }, 
+            '服飾美妝': { icon: '🛍️', color: '#FDE047', type: 'expense' }, 
+            '追星': { icon: '💎', color: '#C084FC', type: 'expense' }, 
+            '娛樂': { icon: '🎤', color: '#818CF8', type: 'expense' },
             '學習': { icon: '📚', color: '#FDBA74', type: 'expense' }, 
             '醫療': { icon: '💊', color: '#FDA4AF', type: 'expense' }, 
+            '固定支出': { icon: '📱', color: '#D8B4E2', type: 'expense' },
+            '住宿': { icon: '🏠', color: '#9CA3AF', type: 'expense' },
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
             '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
-            '退款': { icon: '🧾', color: '#22c55e', type: 'income' }     
+            '薪資': { icon: '💰', color: '#22c55e', type: 'income' },
+            '退款': { icon: '🧾', color: '#34d399', type: 'income' },
+            '其他收入': { icon: '🎁', color: '#a7f3d0', type: 'income' }
         };
 
+        // 🌟 更新：分類按鈕點擊後的柔和配色 (淺寧靜藍底 + 深寧靜藍字)
         function renderCategoryGrid() {
-            let expenseHtml = '';
-            let incomeHtml = '';
+            let expenseHtml = ''; let incomeHtml = '';
             Object.keys(categoryConfig).forEach(cat => {
                 const conf = categoryConfig[cat];
                 const html = `
                     <label class="cursor-pointer group">
                         <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '飲食' ? 'checked' : ''}>
-                        <div class="py-3 px-1 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#92A8D1] peer-checked:text-white transition-all flex flex-col items-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/40">
+                        <div class="aspect-square p-2 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#E8EEF9] peer-checked:border-[#92A8D1] transition-all flex flex-col items-center justify-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/20">
                             <span class="text-2xl transition-transform peer-checked:scale-110 drop-shadow-sm">${conf.icon}</span>
-                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-white">${cat}</span>
+                            <span class="text-[10px] font-bold text-gray-400 peer-checked:text-[#6A85B6] leading-none mt-1">${cat}</span>
                         </div>
-                    </label>
-                `;
-                if (conf.type === 'expense') expenseHtml += html;
-                else incomeHtml += html;
+                    </label>`;
+                if (conf.type === 'expense') expenseHtml += html; else incomeHtml += html;
             });
-            document.getElementById('expense-categories').innerHTML = expenseHtml;
-            document.getElementById('income-categories').innerHTML = incomeHtml;
+            document.getElementById('expense-categories').innerHTML = expenseHtml; document.getElementById('income-categories').innerHTML = incomeHtml;
+        }
+
+        function saveBudget() {
+            const val = document.getElementById('budget-input').value;
+            localStorage.setItem('svt_budget', val);
+            loadStatsData(); 
+        }
+        function loadBudgetInput() {
+            const saved = localStorage.getItem('svt_budget') || 20000;
+            document.getElementById('budget-input').value = saved;
+        }
+
+        let startX, startY;
+        let activeSwipeItem = null;
+        
+        document.addEventListener('touchstart', e => {
+            const swipeable = e.target.closest('.swipeable-item');
+            if (activeSwipeItem && activeSwipeItem !== swipeable) {
+                activeSwipeItem.style.transform = 'translateX(0)'; 
+                activeSwipeItem = null;
+            }
+            if (!swipeable) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            activeSwipeItem = swipeable;
+            swipeable.style.transition = 'none';
+        }, {passive: true});
+
+        document.addEventListener('touchmove', e => {
+            if (!activeSwipeItem) return;
+            const diffX = e.touches[0].clientX - startX;
+            const diffY = e.touches[0].clientY - startY;
+            if (Math.abs(diffX) > Math.abs(diffY)) { 
+                if (diffX < 0) { 
+                    let move = Math.max(diffX, -80);
+                    activeSwipeItem.style.transform = `translateX(${move}px)`;
+                } else if (diffX > 0 && activeSwipeItem.style.transform.includes('-80')) { 
+                    let move = Math.min(-80 + diffX, 0);
+                    activeSwipeItem.style.transform = `translateX(${move}px)`;
+                }
+            }
+        }, {passive: true});
+
+        document.addEventListener('touchend', e => {
+            if (!activeSwipeItem) return;
+            activeSwipeItem.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+            const currentTransform = activeSwipeItem.style.transform;
+            let currentX = 0;
+            if(currentTransform.includes('translateX')) {
+                currentX = parseFloat(currentTransform.replace('translateX(', '').replace('px)', ''));
+            }
+            if (currentX < -40) { activeSwipeItem.style.transform = 'translateX(-80px)'; } 
+            else { activeSwipeItem.style.transform = 'translateX(0)'; activeSwipeItem = null; } 
+        });
+
+        function handleItemClick(e, id) {
+            const item = e.currentTarget;
+            if (item.style.transform === 'translateX(-80px)') {
+                item.style.transform = 'translateX(0)'; return;
+            }
+            openEditModal(id);
+        }
+
+        function confirmDirectDelete(id) {
+            currentEditingId = id;
+            document.getElementById('delete-modal').classList.remove('hidden-view');
         }
 
         function changeCalendarCurrency(currency) {
             calendarDisplayCurrency = currency;
             document.getElementById('btn-cal-twd').className = currency === 'TWD' ? 'px-2 py-1 rounded bg-white text-[#92A8D1] shadow-sm transition-all' : 'px-2 py-1 text-gray-400 transition-all';
             document.getElementById('btn-cal-krw').className = currency === 'KRW' ? 'px-2 py-1 rounded bg-white text-[#92A8D1] shadow-sm transition-all' : 'px-2 py-1 text-gray-400 transition-all';
-            const year = myCalendar ? myCalendar.selectedYear : new Date().getFullYear();
-            const monthIndex = myCalendar ? myCalendar.selectedMonth : new Date().getMonth(); 
+            const year = myCalendar ? myCalendar.selectedYear : new Date().getFullYear(); const monthIndex = myCalendar ? myCalendar.selectedMonth : new Date().getMonth(); 
             renderCalendarBadgesAndTotal(year, monthIndex);
         }
 
         function openAddModal() { 
-            currentEditingId = null; 
-            document.getElementById('modal-title').innerText = '新增紀錄 💸';
-            document.getElementById('btn-submit').innerText = '儲存';
-            document.getElementById('btn-delete').classList.add('hidden-view'); 
-            document.getElementById('amount').value = '';
-            document.getElementById('note').value = '';
-            document.getElementById('record_date').value = selectedDateStr;
-            const defaultRadio = document.querySelector('input[name="category"][value="飲食"]');
-            if(defaultRadio) defaultRadio.checked = true;
+            currentEditingId = null; document.getElementById('modal-title').innerText = '新增紀錄 💸';
+            document.getElementById('btn-submit').innerText = '儲存'; document.getElementById('btn-delete').classList.add('hidden-view'); 
+            document.getElementById('amount').value = ''; document.getElementById('note').value = ''; document.getElementById('record_date').value = selectedDateStr;
+            const defaultRadio = document.querySelector('input[name="category"][value="飲食"]'); if(defaultRadio) defaultRadio.checked = true;
             document.getElementById('modal-input').classList.remove('hidden-view'); 
         }
 
         function openEditModal(id) {
-            currentEditingId = id; 
-            const record = allRecords.find(r => String(r.id) === String(id));
-            if(!record) return;
-            document.getElementById('currency').value = record.currency;
-            document.getElementById('amount').value = record.amount;
-            document.getElementById('payment_method').value = record.payment_method;
-            document.getElementById('record_date').value = record.record_date;
-            document.getElementById('note').value = record.note || '';
-            const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`);
-            if(catRadio) catRadio.checked = true;
-            document.getElementById('modal-title').innerText = '編輯紀錄 ✍️';
-            document.getElementById('btn-submit').innerText = '儲存修改';
-            document.getElementById('btn-delete').classList.remove('hidden-view'); 
-            document.getElementById('modal-input').classList.remove('hidden-view');
+            currentEditingId = id; const record = allRecords.find(r => String(r.id) === String(id)); if(!record) return;
+            document.getElementById('currency').value = record.currency; document.getElementById('amount').value = record.amount;
+            document.getElementById('payment_method').value = record.payment_method; document.getElementById('record_date').value = record.record_date; document.getElementById('note').value = record.note || '';
+            const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`); if(catRadio) catRadio.checked = true;
+            document.getElementById('modal-title').innerText = '編輯紀錄 ✍️'; document.getElementById('btn-submit').innerText = '儲存修改';
+            document.getElementById('btn-delete').classList.remove('hidden-view'); document.getElementById('modal-input').classList.remove('hidden-view');
         }
 
         function closeModal() { document.getElementById('modal-input').classList.add('hidden-view'); }
@@ -399,20 +437,16 @@
         function switchTab(tabName) {
             document.querySelectorAll('main').forEach(m => m.classList.add('hidden-view'));
             document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-[#92A8D1]', 'text-gray-400'));
-            document.getElementById('view-' + tabName).classList.remove('hidden-view');
-            document.getElementById('tab-' + tabName).classList.replace('text-gray-400', 'text-[#92A8D1]');
-            if(tabName === 'calendar') fetchAndRenderAll();
-            if(tabName === 'stats') loadStatsData();
-            if(tabName === 'wallet') loadWalletData();
-            if(tabName === 'tools') {
-                // 回到克拉島時重置狀態
-                document.getElementById('search-input').value = ''; 
-                executeSearch();
-            }
+            document.getElementById('view-' + tabName).classList.remove('hidden-view'); document.getElementById('tab-' + tabName).classList.replace('text-gray-400', 'text-[#92A8D1]');
+            if(tabName === 'calendar') fetchAndRenderAll(); if(tabName === 'stats') loadStatsData(); if(tabName === 'wallet') loadWalletData();
+            if(tabName === 'tools') { document.getElementById('search-input').value = ''; executeSearch(); }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderCategoryGrid(); 
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderCategoryGrid(); loadBudgetInput();
+            
+            await fetchLiveExchangeRate();
+
             document.getElementById('record_date').value = selectedDateStr;
             myCalendar = new VanillaCalendar('#calendar', {
                 settings: { lang: 'zh-TW', selection: { day: 'single' }, iso8601: false },
@@ -420,39 +454,27 @@
                     clickDay(event, self) {
                         const target = event.target.closest('[data-calendar-day]');
                         if (target && target.dataset.calendarDay) {
-                            selectedDateStr = target.dataset.calendarDay;
-                            document.getElementById('record_date').value = selectedDateStr;
-                            renderDailyDetails(selectedDateStr);
-                            setTimeout(() => { renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth); }, 50);
+                            selectedDateStr = target.dataset.calendarDay; document.getElementById('record_date').value = selectedDateStr;
+                            renderDailyDetails(selectedDateStr); setTimeout(() => { renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth); }, 50);
                         }
                     },
-                    changeMonth(event, self) {
-                        setTimeout(() => renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth), 50);
-                    }
+                    changeMonth(event, self) { setTimeout(() => renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth), 50); }
                 }
             });
-            myCalendar.init();
-            fetchAndRenderAll();
+            myCalendar.init(); fetchAndRenderAll();
         });
 
         document.getElementById('ledger-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const selectedCategory = document.querySelector('input[name="category"]:checked').value;
             const record = {
-                currency: document.getElementById('currency').value,
-                amount: Number(document.getElementById('amount').value),
-                payment_method: document.getElementById('payment_method').value,
-                record_date: document.getElementById('record_date').value,
-                category: selectedCategory, 
-                note: document.getElementById('note').value,
+                currency: document.getElementById('currency').value, amount: Number(document.getElementById('amount').value),
+                payment_method: document.getElementById('payment_method').value, record_date: document.getElementById('record_date').value,
+                category: selectedCategory, note: document.getElementById('note').value,
             };
             record.amount_twd = record.currency === 'KRW' ? Math.round(record.amount * KRW_RATE) : record.amount;
             selectedDateStr = record.record_date; 
-            if (currentEditingId) {
-                await db.from('ledger').update(record).eq('id', currentEditingId);
-            } else {
-                await db.from('ledger').insert([record]);
-            }
+            if (currentEditingId) { await db.from('ledger').update(record).eq('id', currentEditingId); } else { await db.from('ledger').insert([record]); }
             closeModal(); fetchAndRenderAll(); closeDrilldownModal(); 
             if(!document.getElementById('view-tools').classList.contains('hidden-view')) executeSearch();
         });
@@ -468,12 +490,9 @@
 
         async function fetchAndRenderAll() {
             const { data: records } = await db.from('ledger').select('*').order('record_date', { ascending: false });
-            if (!records) return; 
-            allRecords = records;
-            const year = myCalendar ? myCalendar.selectedYear : new Date().getFullYear();
-            const monthIndex = myCalendar ? myCalendar.selectedMonth : new Date().getMonth(); 
-            renderCalendarBadgesAndTotal(year, monthIndex);
-            renderDailyDetails(selectedDateStr);
+            if (!records) return; allRecords = records;
+            const year = myCalendar ? myCalendar.selectedYear : new Date().getFullYear(); const monthIndex = myCalendar ? myCalendar.selectedMonth : new Date().getMonth(); 
+            renderCalendarBadgesAndTotal(year, monthIndex); renderDailyDetails(selectedDateStr);
         }
 
         function renderCalendarBadgesAndTotal(year, monthIndex) {
@@ -482,7 +501,6 @@
             allRecords.forEach(r => {
                 const isInc = incomeCategories.includes(r.category); const [rYear, rMonth] = r.record_date.split('-');
                 let valTwd = r.amount_twd; let valKrw = r.currency === 'KRW' ? r.amount : Math.round(r.amount / KRW_RATE);
-                
                 if(rYear === targetYear && rMonth === targetMonth) { 
                     if(isInc) monthIncome += (calendarDisplayCurrency === 'TWD' ? valTwd : valKrw); 
                     else monthExpense += (calendarDisplayCurrency === 'TWD' ? valTwd : valKrw); 
@@ -526,14 +544,19 @@
                 const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
                 const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
-                    <div onclick="openEditModal('${r.id}')" class="cursor-pointer bg-white rounded-[20px] shadow-sm border border-gray-100 p-4 flex items-center justify-between mb-3 transition-transform active:scale-95 hover:border-[#92A8D1]/30">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
-                            <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-xs text-gray-400 font-bold">${noteDisplay}</div></div>
+                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent">
+                        <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer" onclick="confirmDirectDelete('${r.id}')">
+                            <span class="active:scale-90 transition-transform">🗑️</span>
                         </div>
-                        <div class="text-right">
-                            <div class="font-black ${amountColor} text-base mb-0.5">${sign}${displayAmt}</div>
-                            <div class="text-[10px] font-bold text-gray-400 uppercase bg-gray-100 inline-block px-2 py-0.5 rounded-sm">${r.payment_method}</div>
+                        <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-[20px] shadow-sm border border-gray-100 p-4 flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-xs text-gray-400 font-bold">${noteDisplay}</div></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-black ${amountColor} text-base mb-0.5">${sign}${displayAmt}</div>
+                                <div class="text-[10px] font-bold text-gray-400 uppercase bg-gray-100 inline-block px-2 py-0.5 rounded-sm">${r.payment_method}</div>
+                            </div>
                         </div>
                     </div>`;
             });
@@ -555,11 +578,25 @@
             const startDate = `${year}-${month}-01`; const endDate = new Date(year, currentStatsDate.getMonth() + 1, 0).toISOString().split('T')[0];
             const { data } = await db.from('ledger').select('*').gte('record_date', startDate).lte('record_date', endDate);
             
-            let totalExpense = 0; const sums = {};
+            let totalExpense = 0; let totalTwdForBudget = 0; const sums = {};
             data.filter(item => !incomeCategories.includes(item.category)).forEach(item => {
                 let valToAdd = displayCurrency === 'TWD' ? item.amount_twd : (item.currency === 'KRW' ? item.amount : Math.round(item.amount / KRW_RATE));
-                totalExpense += valToAdd; sums[item.category] = (sums[item.category] || 0) + valToAdd;
+                totalExpense += valToAdd; 
+                totalTwdForBudget += item.amount_twd; 
+                sums[item.category] = (sums[item.category] || 0) + valToAdd;
             });
+            
+            const budget = Number(localStorage.getItem('svt_budget')) || 20000;
+            const progress = Math.min((totalTwdForBudget / budget) * 100, 100).toFixed(1);
+            document.getElementById('budget-text').innerText = `${totalTwdForBudget.toLocaleString()} / ${budget.toLocaleString()}`;
+            document.getElementById('budget-percentage').innerText = `${progress}%`;
+            
+            const barEl = document.getElementById('budget-bar');
+            barEl.style.width = `${progress}%`;
+            if(progress > 90) barEl.className = 'h-full rounded-full transition-all duration-700 bg-red-400';
+            else if(progress > 70) barEl.className = 'h-full rounded-full transition-all duration-700 bg-orange-400';
+            else barEl.className = 'h-full rounded-full transition-all duration-700 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]';
+
             const prefix = displayCurrency === 'TWD' ? 'NT$' : '₩';
             document.getElementById('stats-total-text').innerText = totalExpense.toLocaleString();
             const sortedCategories = Object.keys(sums).sort((a, b) => sums[b] - sums[a]);
@@ -584,10 +621,10 @@
             });
             if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold">這個月還沒有支出紀錄喔！</div>`;
             document.getElementById('stats-list').innerHTML = listHTML;
-            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC', '#FDBA74', '#FDA4AF'];
+            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC', '#818CF8', '#FDBA74', '#FDA4AF', '#D8B4E2', '#9CA3AF', '#FBCFE8'];
             const ctx = document.getElementById('myDonutChart').getContext('2d');
             if (myDonutChart) myDonutChart.destroy(); 
-            myDonutChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values.length > 0 ? values : [1], backgroundColor: values.length > 0 ? svtChartColors : ['#f3f4f6'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { if(totalExpense === 0) return ' 無資料'; return ` ${prefix}${context.parsed.toLocaleString()}`; } } } } } });
+            myDonutChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values.length > 0 ? values : [1], backgroundColor: values.length > 0 ? svtChartColors.slice(0, labels.length) : ['#f3f4f6'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { if(totalExpense === 0) return ' 無資料'; return ` ${prefix}${context.parsed.toLocaleString()}`; } } } } } });
         }
 
         let currentWalletDate = new Date();
@@ -648,14 +685,19 @@
                     const dateDisplay = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
                     const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
                     html += `
-                        <div onclick="openEditModal('${r.id}')" class="cursor-pointer bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 active:scale-95 transition-all">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
-                                <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                        <div class="relative mb-3 rounded-[16px] bg-red-50 border border-transparent">
+                            <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer" onclick="confirmDirectDelete('${r.id}')">
+                                <span class="active:scale-90 transition-transform">🗑️</span>
                             </div>
-                            <div class="text-right">
-                                <div class="font-black text-gray-700 text-sm">-${displayAmt}</div>
-                                <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
+                            <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-[16px] p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 cursor-pointer">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                    <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-black text-gray-700 text-sm">-${displayAmt}</div>
+                                    <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
+                                </div>
                             </div>
                         </div>`;
                 });
@@ -666,39 +708,27 @@
 
         function closeDrilldownModal() { document.getElementById('modal-drilldown').classList.add('hidden-view'); }
 
-        // ==================== 🌟 搜尋與百寶箱切換邏輯 ====================
         function executeSearch() {
             const keyword = document.getElementById('search-input').value.toLowerCase().trim();
             const container = document.getElementById('search-results-list');
             const toolsMenu = document.getElementById('tools-menu');
-            
-            // 如果沒輸入字：顯示克拉百寶箱，隱藏搜尋結果
             if (!keyword) {
-                container.classList.add('hidden-view');
-                toolsMenu.classList.remove('hidden-view');
-                return;
+                container.classList.add('hidden-view'); toolsMenu.classList.remove('hidden-view'); return;
             }
-
-            // 只要一打字：隱藏百寶箱，開始顯示搜尋結果
-            toolsMenu.classList.add('hidden-view');
-            container.classList.remove('hidden-view');
-
+            toolsMenu.classList.add('hidden-view'); container.classList.remove('hidden-view');
             const results = allRecords.filter(r => 
                 (r.note && r.note.toLowerCase().includes(keyword)) ||
                 (r.category && r.category.toLowerCase().includes(keyword)) ||
                 (r.payment_method && r.payment_method.toLowerCase().includes(keyword))
             );
-
             results.sort((a, b) => {
                 const dateA = new Date(a.record_date).getTime(); const dateB = new Date(b.record_date).getTime();
                 if (dateA !== dateB) return dateB - dateA; return b.id - a.id; 
             });
-
             if (results.length === 0) {
                 container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">找不到相關紀錄 🥲 勝哲說不能亂花錢！</div>`;
                 return;
             }
-
             let html = `<div class="text-xs font-black text-gray-400 mb-3 px-1">💎 找到 ${results.length} 筆紀錄</div>`;
             results.forEach(r => {
                 const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' };
@@ -710,14 +740,19 @@
                 const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
 
                 html += `
-                    <div onclick="openEditModal('${r.id}')" class="cursor-pointer bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 active:scale-95 transition-all mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
-                            <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                    <div class="relative mb-3 rounded-2xl bg-red-50 border border-transparent">
+                        <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer" onclick="confirmDirectDelete('${r.id}')">
+                            <span class="active:scale-90 transition-transform">🗑️</span>
                         </div>
-                        <div class="text-right">
-                            <div class="font-black ${amountColor} text-sm">${sign}${displayAmt}</div>
-                            <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
+                        <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-black ${amountColor} text-sm">${sign}${displayAmt}</div>
+                                <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
+                            </div>
                         </div>
                     </div>`;
             });
