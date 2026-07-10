@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🍒 S.COUPS BANK</title>
+    <title>🍒 C. BANK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro/build/vanilla-calendar.min.css" rel="stylesheet">
@@ -19,19 +19,13 @@
         .vanilla-calendar-day__btn_selected { background-color: #92A8D1 !important; color: white !important; box-shadow: 0 4px 10px rgba(146, 168, 209, 0.4) !important; }
         .vanilla-calendar-day__btn_today { color: #F7CAC9 !important; background-color: #FFF0F0 !important; }
         
-        /* 🌟 完美契合的克拉島日曆標籤色 */
         .day-cost { 
             position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 8.5px; letter-spacing: -0.3px; font-weight: bold; 
-            background: #F7CAC9; /* 支出：石英粉 */
-            color: #4B5563; /* 深灰字體確保高對比度易讀 */
+            background: #F7CAC9; color: #4B5563; 
             border-radius: 4px; padding: 1px 3px; text-align: center; width: 90%; line-height: 1.1; white-space: nowrap; overflow: hidden; pointer-events: none; 
             box-shadow: 0 2px 4px rgba(247, 202, 201, 0.4);
         }
-        .day-income { 
-            background: #92A8D1; /* 收入：寧靜藍 */
-            color: #FFFFFF;
-            box-shadow: 0 2px 4px rgba(146, 168, 209, 0.4);
-        }
+        .day-income { background: #92A8D1; color: #FFFFFF; box-shadow: 0 2px 4px rgba(146, 168, 209, 0.4); }
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -45,7 +39,7 @@
         
         <header class="bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] text-white p-5 text-center sticky top-0 z-40 shadow-md rounded-b-3xl border-b-4 border-white/30">
             <h1 class="text-2xl font-black tracking-widest drop-shadow-md flex justify-center items-center gap-2">
-                <span>🍒</span> S.COUPS BANK
+                <span>🍒</span> C. BANK
             </h1>
         </header>
 
@@ -81,7 +75,10 @@
                 <div class="w-full bg-gray-100 rounded-full h-3.5 mb-1 overflow-hidden">
                     <div id="budget-bar" class="h-full rounded-full transition-all duration-700 w-0 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]"></div>
                 </div>
-                <div class="text-[9px] text-right font-black text-gray-400" id="budget-percentage">0%</div>
+                <div class="text-[9px] text-right font-black text-gray-400 mb-3" id="budget-percentage">0%</div>
+                <div class="text-xs font-bold text-[#6A85B6] bg-[#E8EEF9] p-2.5 rounded-xl text-center transition-all duration-500" id="budget-message">
+                    🍒 載入中...
+                </div>
             </div>
 
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
@@ -108,6 +105,24 @@
         </main>
 
         <main id="view-wallet" class="p-4 hidden-view">
+            
+            <div class="bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-[24px] shadow-md p-6 mb-6 text-white relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-6xl opacity-10">💱</div>
+                <h3 class="text-xs font-black opacity-80 mb-4 uppercase tracking-wider flex items-center gap-1"><span>💱</span> 雙向匯率計算機 <span id="calc-rate-hint" class="text-[8px] bg-white/20 px-1.5 py-0.5 rounded">即時</span></h3>
+                
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex-1 bg-white/10 rounded-xl p-3 border border-white/20 focus-within:border-white transition-colors">
+                        <div class="text-[10px] font-bold opacity-80 mb-1">韓元 (KRW)</div>
+                        <input type="number" id="calc-krw" oninput="calcExchange('krw')" class="w-full bg-transparent text-xl font-black outline-none placeholder-white/40" placeholder="0">
+                    </div>
+                    <div class="text-xl opacity-80">⇌</div>
+                    <div class="flex-1 bg-white/10 rounded-xl p-3 border border-white/20 focus-within:border-white transition-colors">
+                        <div class="text-[10px] font-bold opacity-80 mb-1">台幣 (TWD)</div>
+                        <input type="number" id="calc-twd" oninput="calcExchange('twd')" class="w-full bg-transparent text-xl font-black outline-none placeholder-white/40" placeholder="0">
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
                 <div class="flex justify-between items-center mb-6">
                     <button onclick="changeWalletMonth(-1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&lt;</button>
@@ -198,7 +213,6 @@
                                     <option value="UNIOPEN卡">💳 UNIOPEN卡</option>
                                     <option value="韓國卡">🇰🇷 韓國卡</option>
                                 </optgroup>
-                                <!-- 🌟 新增 LINE PAY -->
                                 <optgroup label="現金與行動支付">
                                     <option value="現金">💵 現金</option>
                                     <option value="LINE PAY">🟢 LINE PAY</option>
@@ -291,6 +305,19 @@
             }
         }
 
+        // 🌟 匯率計算機邏輯
+        function calcExchange(source) {
+            const krwInput = document.getElementById('calc-krw');
+            const twdInput = document.getElementById('calc-twd');
+            if(source === 'krw') {
+                const krw = parseFloat(krwInput.value) || 0;
+                twdInput.value = Math.round(krw * KRW_RATE);
+            } else {
+                const twd = parseFloat(twdInput.value) || 0;
+                krwInput.value = Math.round(twd / KRW_RATE);
+            }
+        }
+
         function getLocalDateStr(date = new Date()) {
             const tzOffset = date.getTimezoneOffset() * 60000;
             return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
@@ -323,7 +350,6 @@
             '其他收入': { icon: '🎁', color: '#a7f3d0', type: 'income' }
         };
 
-        // 🌟 更新：分類按鈕點擊後的柔和配色 (淺寧靜藍底 + 深寧靜藍字)
         function renderCategoryGrid() {
             let expenseHtml = ''; let incomeHtml = '';
             Object.keys(categoryConfig).forEach(cat => {
@@ -361,23 +387,18 @@
                 activeSwipeItem = null;
             }
             if (!swipeable) return;
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            activeSwipeItem = swipeable;
-            swipeable.style.transition = 'none';
+            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+            activeSwipeItem = swipeable; swipeable.style.transition = 'none';
         }, {passive: true});
 
         document.addEventListener('touchmove', e => {
             if (!activeSwipeItem) return;
-            const diffX = e.touches[0].clientX - startX;
-            const diffY = e.touches[0].clientY - startY;
+            const diffX = e.touches[0].clientX - startX; const diffY = e.touches[0].clientY - startY;
             if (Math.abs(diffX) > Math.abs(diffY)) { 
                 if (diffX < 0) { 
-                    let move = Math.max(diffX, -80);
-                    activeSwipeItem.style.transform = `translateX(${move}px)`;
+                    let move = Math.max(diffX, -80); activeSwipeItem.style.transform = `translateX(${move}px)`;
                 } else if (diffX > 0 && activeSwipeItem.style.transform.includes('-80')) { 
-                    let move = Math.min(-80 + diffX, 0);
-                    activeSwipeItem.style.transform = `translateX(${move}px)`;
+                    let move = Math.min(-80 + diffX, 0); activeSwipeItem.style.transform = `translateX(${move}px)`;
                 }
             }
         }, {passive: true});
@@ -387,25 +408,18 @@
             activeSwipeItem.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
             const currentTransform = activeSwipeItem.style.transform;
             let currentX = 0;
-            if(currentTransform.includes('translateX')) {
-                currentX = parseFloat(currentTransform.replace('translateX(', '').replace('px)', ''));
-            }
+            if(currentTransform.includes('translateX')) { currentX = parseFloat(currentTransform.replace('translateX(', '').replace('px)', '')); }
             if (currentX < -40) { activeSwipeItem.style.transform = 'translateX(-80px)'; } 
             else { activeSwipeItem.style.transform = 'translateX(0)'; activeSwipeItem = null; } 
         });
 
         function handleItemClick(e, id) {
             const item = e.currentTarget;
-            if (item.style.transform === 'translateX(-80px)') {
-                item.style.transform = 'translateX(0)'; return;
-            }
+            if (item.style.transform === 'translateX(-80px)') { item.style.transform = 'translateX(0)'; return; }
             openEditModal(id);
         }
 
-        function confirmDirectDelete(id) {
-            currentEditingId = id;
-            document.getElementById('delete-modal').classList.remove('hidden-view');
-        }
+        function confirmDirectDelete(id) { currentEditingId = id; document.getElementById('delete-modal').classList.remove('hidden-view'); }
 
         function changeCalendarCurrency(currency) {
             calendarDisplayCurrency = currency;
@@ -470,7 +484,7 @@
             const record = {
                 currency: document.getElementById('currency').value, amount: Number(document.getElementById('amount').value),
                 payment_method: document.getElementById('payment_method').value, record_date: document.getElementById('record_date').value,
-                category: selectedCategory, note: document.getElementById('note').value,
+                category: selectedCategory, note: document.getElementById('note').value
             };
             record.amount_twd = record.currency === 'KRW' ? Math.round(record.amount * KRW_RATE) : record.amount;
             selectedDateStr = record.record_date; 
@@ -528,6 +542,7 @@
             });
         }
 
+        // 🌟 恢復乾淨明亮、不雙幣同顯的卡片設計
         function renderDailyDetails(dateStr) {
             const container = document.getElementById('daily-details-container');
             const dailyRecords = allRecords.filter(r => r.record_date === dateStr);
@@ -541,7 +556,10 @@
             dailyRecords.forEach(r => {
                 const isInc = incomeCategories.includes(r.category); if(isInc) dailyIncomeTwd += r.amount_twd; else dailyExpenseTwd += r.amount_twd;
                 const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' }; const noteDisplay = r.note ? r.note : r.category;
-                const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+                
+                const isKrw = r.currency === 'KRW';
+                const displayAmt = isKrw ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+
                 const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
                     <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent">
@@ -550,10 +568,13 @@
                         </div>
                         <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-[20px] shadow-sm border border-gray-100 p-4 flex items-center justify-between cursor-pointer">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
-                                <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-xs text-gray-400 font-bold">${noteDisplay}</div></div>
+                                <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                <div class="truncate">
+                                    <div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div>
+                                    <div class="text-xs text-gray-400 font-bold truncate pr-2">${noteDisplay}</div>
+                                </div>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right shrink-0 pl-2">
                                 <div class="font-black ${amountColor} text-base mb-0.5">${sign}${displayAmt}</div>
                                 <div class="text-[10px] font-bold text-gray-400 uppercase bg-gray-100 inline-block px-2 py-0.5 rounded-sm">${r.payment_method}</div>
                             </div>
@@ -592,10 +613,22 @@
             document.getElementById('budget-percentage').innerText = `${progress}%`;
             
             const barEl = document.getElementById('budget-bar');
+            const msgEl = document.getElementById('budget-message');
             barEl.style.width = `${progress}%`;
-            if(progress > 90) barEl.className = 'h-full rounded-full transition-all duration-700 bg-red-400';
-            else if(progress > 70) barEl.className = 'h-full rounded-full transition-all duration-700 bg-orange-400';
-            else barEl.className = 'h-full rounded-full transition-all duration-700 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]';
+            
+            if(progress > 80) {
+                barEl.className = 'h-full rounded-full transition-all duration-700 bg-red-400';
+                msgEl.className = 'text-xs font-bold text-red-500 bg-red-50 p-2.5 rounded-xl text-center transition-all duration-500';
+                msgEl.innerText = '🍒 忍耐一下！想想未來的首爾場呀...';
+            } else if(progress > 50) {
+                barEl.className = 'h-full rounded-full transition-all duration-700 bg-orange-400';
+                msgEl.className = 'text-xs font-bold text-orange-500 bg-orange-50 p-2.5 rounded-xl text-center transition-all duration-500';
+                msgEl.innerText = '🍒 總管大人的溫馨提醒：預算過半囉。';
+            } else {
+                barEl.className = 'h-full rounded-full transition-all duration-700 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]';
+                msgEl.className = 'text-xs font-bold text-[#6A85B6] bg-[#E8EEF9] p-2.5 rounded-xl text-center transition-all duration-500';
+                msgEl.innerText = '🍒 步調很完美，這個月也能好好生活呢。';
+            }
 
             const prefix = displayCurrency === 'TWD' ? 'NT$' : '₩';
             document.getElementById('stats-total-text').innerText = totalExpense.toLocaleString();
@@ -667,6 +700,7 @@
             renderDrilldownList(`💳 ${method} · 當月刷卡明細`, records);
         }
 
+        // 🌟 恢復乾淨的明細穿透清單
         function renderDrilldownList(title, records) {
             document.getElementById('drilldown-title').innerText = title;
             const container = document.getElementById('drilldown-list');
@@ -680,7 +714,10 @@
                 let html = '';
                 records.forEach(r => {
                     const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' };
-                    const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+                    
+                    const isKrw = r.currency === 'KRW';
+                    const displayAmt = isKrw ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+
                     const d = new Date(r.record_date); const days = ['日', '一', '二', '三', '四', '五', '六'];
                     const dateDisplay = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
                     const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
@@ -691,11 +728,14 @@
                             </div>
                             <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-[16px] p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 cursor-pointer">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
-                                    <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                    <div class="truncate">
+                                        <div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div>
+                                        <div class="text-[10px] text-gray-400 truncate pr-2">${dateDisplay} ${noteHtml}</div>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <div class="font-black text-gray-700 text-sm">-${displayAmt}</div>
+                                <div class="text-right shrink-0 pl-2">
+                                    <div class="font-black text-gray-700 text-sm mb-0.5">-${displayAmt}</div>
                                     <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
                                 </div>
                             </div>
@@ -708,6 +748,7 @@
 
         function closeDrilldownModal() { document.getElementById('modal-drilldown').classList.add('hidden-view'); }
 
+        // 🌟 恢復乾淨的搜尋結果清單
         function executeSearch() {
             const keyword = document.getElementById('search-input').value.toLowerCase().trim();
             const container = document.getElementById('search-results-list');
@@ -726,13 +767,16 @@
                 if (dateA !== dateB) return dateB - dateA; return b.id - a.id; 
             });
             if (results.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">找不到相關紀錄 🥲 勝哲說不能亂花錢！</div>`;
+                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">找不到相關紀錄 🥲</div>`;
                 return;
             }
             let html = `<div class="text-xs font-black text-gray-400 mb-3 px-1">💎 找到 ${results.length} 筆紀錄</div>`;
             results.forEach(r => {
                 const conf = categoryConfig[r.category] || { icon: '📝', color: '#94a3b8' };
-                const displayAmt = r.currency === 'KRW' ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+                
+                const isKrw = r.currency === 'KRW';
+                const displayAmt = isKrw ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
+                
                 const isInc = incomeCategories.includes(r.category);
                 const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 const d = new Date(r.record_date); const days = ['日', '一', '二', '三', '四', '五', '六'];
@@ -746,11 +790,14 @@
                         </div>
                         <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 cursor-pointer">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl" style="background-color: ${conf.color}30;">${conf.icon}</div>
-                                <div><div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div><div class="text-[10px] text-gray-400">${dateDisplay} ${noteHtml}</div></div>
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0" style="background-color: ${conf.color}30;">${conf.icon}</div>
+                                <div class="truncate">
+                                    <div class="font-black text-gray-800 text-sm mb-0.5">${r.category}</div>
+                                    <div class="text-[10px] text-gray-400 truncate pr-2">${dateDisplay} ${noteHtml}</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-black ${amountColor} text-sm">${sign}${displayAmt}</div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="font-black ${amountColor} text-sm mb-0.5">${sign}${displayAmt}</div>
                                 <div class="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-1 inline-block">${r.payment_method}</div>
                             </div>
                         </div>
