@@ -105,37 +105,14 @@
         </main>
 
         <main id="view-wallet" class="p-4 hidden-view">
-            
-            <div class="bg-gradient-to-tr from-gray-800 to-gray-900 rounded-[24px] shadow-xl p-6 mb-6 text-white relative overflow-hidden">
-                <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full border-4 border-white/10"></div>
-                <div class="absolute -right-2 -bottom-2 w-24 h-24 rounded-full border-4 border-white/10"></div>
-                
-                <div class="flex justify-between items-start mb-6 relative z-10">
-                    <div class="text-[10px] font-bold text-gray-400 tracking-widest uppercase">C. BANK Platinum</div>
-                    <div class="text-2xl opacity-80 drop-shadow-md">💳</div>
-                </div>
-                
-                <div class="relative z-10 mb-4">
-                    <div class="text-[10px] text-gray-400 font-bold mb-1 tracking-wider">本月卡片總帳單</div>
-                    <div class="text-3xl font-black tracking-wider text-white drop-shadow-md" id="wallet-total-card">NT$ 0</div>
-                </div>
-                
-                <div class="flex justify-between items-end relative z-10">
-                    <div>
-                        <div class="text-[8px] text-gray-400 uppercase tracking-widest mb-0.5">Cardholder</div>
-                        <div class="text-xs font-bold tracking-widest uppercase text-gray-200">S.COUPS' CARAT</div>
-                    </div>
-                    <div class="text-xl">🍒</div>
-                </div>
-            </div>
-
+            <!-- 🌟 乾淨無比的錢包頁面 -->
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
                 <div class="flex justify-between items-center mb-6">
                     <button onclick="changeWalletMonth(-1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&lt;</button>
                     <h2 id="wallet-month-label" class="text-lg font-bold text-gray-800">2026 / 07</h2>
                     <button onclick="changeWalletMonth(1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&gt;</button>
                 </div>
-                <h3 class="text-xs font-black text-gray-400 mb-4 uppercase tracking-wider px-1">本月各付款方式明細</h3>
+                <h3 class="text-xs font-black text-gray-400 mb-4 uppercase tracking-wider px-1">本月各付款方式總額</h3>
                 <div id="wallet-list" class="space-y-3"></div>
             </div>
         </main>
@@ -192,7 +169,8 @@
             </div>
         </main>
 
-        <div id="modal-input" class="fixed inset-0 z-[60] flex flex-col justify-end hidden-view">
+        <!-- 🌟 z-[70] 讓編輯彈窗永遠浮在最上層，不會被明細穿透擋住 -->
+        <div id="modal-input" class="fixed inset-0 z-[70] flex flex-col justify-end hidden-view">
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
             
             <div id="modal-scroll-area" class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
@@ -220,18 +198,8 @@
                         </div>
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">付款/入帳</label>
-                            <select id="payment_method" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
-                                <optgroup label="信用卡">
-                                    <option value="CUBE卡">💳 CUBE卡</option>
-                                    <option value="富邦J卡">💳 富邦J卡</option>
-                                    <option value="UNIOPEN卡">💳 UNIOPEN卡</option>
-                                    <option value="韓國卡">🇰🇷 韓國卡</option>
-                                </optgroup>
-                                <optgroup label="現金與行動支付">
-                                    <option value="現金">💵 現金</option>
-                                    <option value="LINE PAY">🟢 LINE PAY</option>
-                                    <option value="銀行帳戶">🏦 銀行帳戶</option>
-                                </optgroup>
+                            <!-- 🌟 動態產生的付款方式選單 -->
+                            <select id="payment_method" onchange="handlePaymentChange(this)" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
                             </select>
                         </div>
                     </div>
@@ -288,6 +256,7 @@
 
     </div>
 
+    <!-- 🌟 z-[100] 確保刪除確認視窗永遠在最頂端 -->
     <div id="delete-modal" class="hidden-view fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-6">
         <div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm">
             <h3 class="text-lg font-black text-gray-800 mb-2">確定要刪除嗎？</h3>
@@ -330,9 +299,33 @@
         let myCalendar = null; 
         let calendarDisplayCurrency = 'TWD'; 
 
-        const incomeCategories = ['生活費', '薪資', '退款', '其他收入'];
+        // 🌟 動態儲存付款方式
+        const defaultPayments = ['CUBE卡', '富邦J卡', 'UNIOPEN卡', '韓國卡', '現金', 'LINE PAY', '銀行帳戶'];
+        let paymentMethods = JSON.parse(localStorage.getItem('cbank_payments')) || defaultPayments;
+
+        function renderPaymentMethods() {
+            let html = '';
+            paymentMethods.forEach(p => { html += `<option value="${p}">${p}</option>`; });
+            html += `<option value="ADD_NEW" class="text-[#92A8D1] font-bold">➕ 新增付款方式...</option>`;
+            document.getElementById('payment_method').innerHTML = html;
+        }
+
+        function handlePaymentChange(select) {
+            if (select.value === 'ADD_NEW') {
+                const newPay = prompt('請輸入新的付款方式：\n(例如：🍎 Apple Pay)');
+                if (newPay) {
+                    paymentMethods.push(newPay);
+                    localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
+                    renderPaymentMethods();
+                    select.value = newPay;
+                } else {
+                    select.value = paymentMethods[0];
+                }
+            }
+        }
         
-        const categoryConfig = {
+        // 🌟 動態儲存分類
+        const defaultCategories = {
             '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
             '飲料': { icon: '🧋', color: '#FBCFE8', type: 'expense' },
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
@@ -345,16 +338,17 @@
             '投資': { icon: '📈', color: '#34D399', type: 'expense' },
             '繳費訂閱': { icon: '📱', color: '#D8B4E2', type: 'expense' },
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
-
             '日用': { icon: '🧴', color: '#A7F3D0', type: 'expense', hidden: true },
             '固定支出': { icon: '📱', color: '#D8B4E2', type: 'expense', hidden: true },
             '住宿': { icon: '🏠', color: '#9CA3AF', type: 'expense', hidden: true },
-
             '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
             '薪資': { icon: '💰', color: '#22c55e', type: 'income' },
             '退款': { icon: '🧾', color: '#34d399', type: 'income' },
             '其他收入': { icon: '🎁', color: '#a7f3d0', type: 'income' }
         };
+
+        let categoryConfig = JSON.parse(localStorage.getItem('cbank_categories')) || defaultCategories;
+        let incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
 
         function renderCategoryGrid() {
             let expenseHtml = ''; let incomeHtml = '';
@@ -367,12 +361,40 @@
                         <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '飲食' ? 'checked' : ''}>
                         <div class="aspect-square p-2 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#E8EEF9] peer-checked:border-[#92A8D1] transition-all flex flex-col items-center justify-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/20">
                             <span class="text-2xl transition-transform peer-checked:scale-110 drop-shadow-sm">${conf.icon}</span>
-                            <span class="text-[10px] font-bold text-gray-400 peer-checked:text-[#6A85B6] leading-none mt-1">${cat}</span>
+                            <span class="text-[10px] font-bold text-gray-400 peer-checked:text-[#6A85B6] leading-none mt-1 truncate w-full text-center px-0.5">${cat}</span>
                         </div>
                     </label>`;
                 if (conf.type === 'expense') expenseHtml += html; else incomeHtml += html;
             });
+
+            // 加入自訂按鈕
+            expenseHtml += `
+                <div onclick="addCategory('expense')" class="aspect-square p-2 rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95">
+                    <span class="text-xl text-gray-300">➕</span>
+                    <span class="text-[10px] font-bold text-gray-400 leading-none mt-1">新增</span>
+                </div>`;
+            incomeHtml += `
+                <div onclick="addCategory('income')" class="aspect-square p-2 rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95">
+                    <span class="text-xl text-gray-300">➕</span>
+                    <span class="text-[10px] font-bold text-gray-400 leading-none mt-1">新增</span>
+                </div>`;
+
             document.getElementById('expense-categories').innerHTML = expenseHtml; document.getElementById('income-categories').innerHTML = incomeHtml;
+        }
+
+        // 🌟 新增分類功能
+        function addCategory(type) {
+            const name = prompt(`請輸入新的${type==='expense'?'支出':'收入'}分類名稱：\n(例如：消夜)`);
+            if (!name) return;
+            if (categoryConfig[name]) { alert('這個分類已經存在囉！'); return; }
+            let icon = prompt('請輸入一個代表符號 (Emoji)：\n(例如：🍜)');
+            if (!icon) icon = '✨';
+            
+            categoryConfig[name] = { icon: icon, color: type==='expense' ? '#9CA3AF' : '#34d399', type: type };
+            localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig));
+            
+            incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
+            renderCategoryGrid();
         }
 
         function saveBudget() {
@@ -385,7 +407,6 @@
             document.getElementById('budget-input').value = saved;
         }
 
-        // 🌟 修正：防止滑動刪除穿透觸發編輯頁面
         let startX, startY;
         let activeSwipeItem = null;
         
@@ -422,7 +443,6 @@
             else { activeSwipeItem.style.transform = 'translateX(0px)'; activeSwipeItem = null; } 
         });
 
-        // 🌟 優化的防穿透判定
         function handleItemClick(e, id) {
             const item = e.currentTarget;
             if (item.style.transform && item.style.transform !== 'translateX(0px)' && item.style.transform !== 'translateX(0)') { 
@@ -431,20 +451,18 @@
             openEditModal(id);
         }
 
-        // 🌟 垃圾桶點擊事件加入 event.stopPropagation() 防穿透
         function confirmDirectDelete(event, id) { 
             if(event) { event.preventDefault(); event.stopPropagation(); }
             currentEditingId = id; 
             document.getElementById('delete-modal').classList.remove('hidden-view'); 
         }
 
-        // 🌟 一鍵匯出 CSV (Excel)
+        // 🌟 匯出為 Excel CSV 功能
         function exportToCSV() {
             if (allRecords.length === 0) {
                 alert("目前沒有任何紀錄可以匯出喔！");
                 return;
             }
-            // 加上 BOM 避免 Excel 亂碼
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
             csvContent += "日期,收支,分類,付款方式,紀錄金額,幣別,台幣等值,備註\n";
             
@@ -458,7 +476,7 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `C_BANK_紀錄_${getLocalDateStr()}.csv`);
+            link.setAttribute("download", `CBANK_紀錄_${getLocalDateStr()}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -484,7 +502,15 @@
         function openEditModal(id) {
             currentEditingId = id; const record = allRecords.find(r => String(r.id) === String(id)); if(!record) return;
             document.getElementById('currency').value = record.currency; document.getElementById('amount').value = record.amount;
-            document.getElementById('payment_method').value = record.payment_method; document.getElementById('record_date').value = record.record_date; document.getElementById('note').value = record.note || '';
+            
+            // 如果原本的付款方式被刪掉或不在清單裡，自動補回去以免變空白
+            if (!paymentMethods.includes(record.payment_method)) {
+                paymentMethods.push(record.payment_method);
+                localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
+                renderPaymentMethods();
+            }
+            document.getElementById('payment_method').value = record.payment_method; 
+            document.getElementById('record_date').value = record.record_date; document.getElementById('note').value = record.note || '';
             const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`); if(catRadio) catRadio.checked = true;
             document.getElementById('modal-title').innerText = '編輯紀錄 ✍️'; document.getElementById('btn-submit').innerText = '儲存修改';
             document.getElementById('btn-delete').classList.remove('hidden-view'); document.getElementById('modal-input').classList.remove('hidden-view');
@@ -503,7 +529,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            renderCategoryGrid(); loadBudgetInput();
+            renderPaymentMethods();
+            renderCategoryGrid(); 
+            loadBudgetInput();
             
             await fetchLiveExchangeRate();
 
@@ -588,13 +616,15 @@
             });
         }
 
+        // 🌟 加入 MINITEEN 陪伴文字彩蛋
         function renderDailyDetails(dateStr) {
             const container = document.getElementById('daily-details-container');
             const dailyRecords = allRecords.filter(r => r.record_date === dateStr);
             const d = new Date(dateStr); const days = ['日', '一', '二', '三', '四', '五', '六'];
             const dateTitle = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
             if (dailyRecords.length === 0) {
-                container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold">這天沒有花費紀錄喔！🏝️</div>`;
+                container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div>
+                <div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold flex flex-col gap-1">這天沒有花費紀錄喔！🏝️<span class="text-[10px] text-[#92A8D1] opacity-80">MINITEEN 都在為你加油！💎</span></div>`;
                 return;
             }
             let dailyExpenseTwd = 0; let dailyIncomeTwd = 0; let listHTML = '';
@@ -607,7 +637,7 @@
 
                 const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
-                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent overflow-hidden">
+                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent">
                         <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer z-0" onclick="confirmDirectDelete(event, '${r.id}')">
                             <span class="active:scale-90 transition-transform">🗑️</span>
                         </div>
@@ -697,7 +727,7 @@
                     </div>
                 </div>`;
             });
-            if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold">這個月還沒有支出紀錄喔！</div>`;
+            if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold flex flex-col gap-1">這個月還沒有支出紀錄喔！<span class="text-[10px] text-[#92A8D1] opacity-80">讓 MINITEEN 幫你守住錢包 💎</span></div>`;
             document.getElementById('stats-list').innerHTML = listHTML;
             const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC', '#818CF8', '#FDBA74', '#FDA4AF', '#D8B4E2', '#9CA3AF', '#FBCFE8'];
             const ctx = document.getElementById('myDonutChart').getContext('2d');
@@ -714,17 +744,11 @@
             const startDate = `${year}-${month}-01`; const endDate = new Date(year, currentWalletDate.getMonth() + 1, 0).toISOString().split('T')[0];
             const { data } = await db.from('ledger').select('*').gte('record_date', startDate).lte('record_date', endDate);
             
-            const paySums = {}; let totalTwd = 0; let monthlyTotalExpense = 0;
+            const paySums = {}; let totalTwd = 0;
             data.filter(item => !incomeCategories.includes(item.category)).forEach(item => {
                 const method = item.payment_method || '未分類';
-                paySums[method] = (paySums[method] || 0) + item.amount_twd; 
-                totalTwd += item.amount_twd;
-                monthlyTotalExpense += item.amount_twd;
+                paySums[method] = (paySums[method] || 0) + item.amount_twd; totalTwd += item.amount_twd;
             });
-            
-            // 更新黑卡總金額
-            document.getElementById('wallet-total-card').innerText = `NT$ ${monthlyTotalExpense.toLocaleString()}`;
-
             let listHTML = '';
             Object.keys(paySums).sort((a, b) => paySums[b] - paySums[a]).forEach(method => {
                 listHTML += `
@@ -733,7 +757,7 @@
                     <span class="font-black text-[#92A8D1] text-base">NT$ ${paySums[method].toLocaleString()}</span>
                 </div>`;
             });
-            if (totalTwd === 0) listHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">這個月還沒有花費喔！</div>`;
+            if (totalTwd === 0) listHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold flex flex-col gap-1">這個月還沒有花費喔！<span class="text-[10px] text-[#92A8D1] opacity-80">小金庫被 MINITEEN 保護得很好✨</span></div>`;
             document.getElementById('wallet-list').innerHTML = listHTML;
         }
 
@@ -816,7 +840,7 @@
                 if (dateA !== dateB) return dateB - dateA; return b.id - a.id; 
             });
             if (results.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">找不到相關紀錄 🥲</div>`;
+                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold flex flex-col gap-1">找不到相關紀錄 🥲<span class="text-[10px] text-[#92A8D1] opacity-80">換個關鍵字讓 MINITEEN 幫你找找看！</span></div>`;
                 return;
             }
             let html = `<div class="text-xs font-black text-gray-400 mb-3 px-1">💎 找到 ${results.length} 筆紀錄</div>`;
