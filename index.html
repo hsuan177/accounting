@@ -11,7 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        html, body { height: 100%; background-color: #f9fafb; touch-action: manipulation; overflow-x: hidden; }
+        /* 🌟 修正 height: 100% 導致的捲動異常，改為 min-height */
+        html, body { min-height: 100%; background-color: #f9fafb; touch-action: manipulation; overflow-x: hidden; }
         .hidden-view { display: none !important; }
         
         .vc-day { min-height: 65px !important; position: relative; padding-top: 4px; }
@@ -105,7 +106,6 @@
         </main>
 
         <main id="view-wallet" class="p-4 hidden-view">
-            <!-- 🌟 乾淨無比的錢包頁面 -->
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5">
                 <div class="flex justify-between items-center mb-6">
                     <button onclick="changeWalletMonth(-1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&lt;</button>
@@ -158,6 +158,15 @@
                         <span id="live-rate-display" class="text-[10px] font-bold text-[#92A8D1] bg-[#92A8D1]/10 px-2 py-1 rounded">連線中...</span>
                     </div>
 
+                    <!-- 🌟 全新：分類與付款管理入口 -->
+                    <div onclick="openManageModal()" class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors active:scale-95 mt-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">⚙️</span>
+                            <span class="font-bold text-gray-600 text-sm">分類與付款管理</span>
+                        </div>
+                        <span class="text-gray-400 font-bold text-lg">&rsaquo;</span>
+                    </div>
+
                     <div onclick="exportToCSV()" class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors active:scale-95 mt-2">
                         <div class="flex items-center gap-3">
                             <span class="text-xl">📥</span>
@@ -169,7 +178,6 @@
             </div>
         </main>
 
-        <!-- 🌟 z-[70] 讓編輯彈窗永遠浮在最上層，不會被明細穿透擋住 -->
         <div id="modal-input" class="fixed inset-0 z-[70] flex flex-col justify-end hidden-view">
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
             
@@ -198,9 +206,7 @@
                         </div>
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                             <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">付款/入帳</label>
-                            <!-- 🌟 動態產生的付款方式選單 -->
-                            <select id="payment_method" onchange="handlePaymentChange(this)" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent">
-                            </select>
+                            <select id="payment_method" onchange="handlePaymentChange(this)" class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent"></select>
                         </div>
                     </div>
 
@@ -235,6 +241,22 @@
             </div>
         </div>
 
+        <!-- 🌟 全新：分類與付款管理彈窗 -->
+        <div id="modal-manage" class="fixed inset-0 z-[80] flex flex-col justify-end hidden-view">
+            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeManageModal()"></div>
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <button onclick="closeManageModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
+                <h2 class="text-lg font-black text-gray-800 mb-5 ml-1">分類與付款管理 ⚙️</h2>
+                
+                <h3 class="text-xs font-black text-[#92A8D1] mb-2 uppercase tracking-wider px-1">付款方式列表</h3>
+                <div id="manage-payment-list" class="space-y-2 mb-6"></div>
+
+                <h3 class="text-xs font-black text-[#F7CAC9] mb-2 uppercase tracking-wider px-1">記帳分類列表</h3>
+                <div id="manage-category-list" class="space-y-2 pb-6"></div>
+            </div>
+        </div>
+
         <button onclick="openAddModal()" class="fixed bottom-28 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_4px_15px_rgba(146,168,209,0.4)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
             <span class="text-3xl font-black mb-1">+</span>
         </button>
@@ -256,7 +278,6 @@
 
     </div>
 
-    <!-- 🌟 z-[100] 確保刪除確認視窗永遠在最頂端 -->
     <div id="delete-modal" class="hidden-view fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-6">
         <div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-sm">
             <h3 class="text-lg font-black text-gray-800 mb-2">確定要刪除嗎？</h3>
@@ -299,7 +320,6 @@
         let myCalendar = null; 
         let calendarDisplayCurrency = 'TWD'; 
 
-        // 🌟 動態儲存付款方式
         const defaultPayments = ['CUBE卡', '富邦J卡', 'UNIOPEN卡', '韓國卡', '現金', 'LINE PAY', '銀行帳戶'];
         let paymentMethods = JSON.parse(localStorage.getItem('cbank_payments')) || defaultPayments;
 
@@ -324,27 +344,35 @@
             }
         }
         
-        // 🌟 動態儲存分類
+        // 🌟 最強 15 + 3 黃金陣容
         const defaultCategories = {
-            '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
+            '正餐': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
             '飲料': { icon: '🧋', color: '#FBCFE8', type: 'expense' },
+            '甜點點心': { icon: '🍰', color: '#FDE68A', type: 'expense' },
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
             '生活日用': { icon: '🧴', color: '#A7F3D0', type: 'expense' }, 
-            '服飾美妝': { icon: '🛍️', color: '#FDE047', type: 'expense' }, 
+            '服飾配件': { icon: '👕', color: '#FDE047', type: 'expense' }, 
+            '美容保養': { icon: '💄', color: '#F9A8D4', type: 'expense' }, 
             '追星': { icon: '💎', color: '#C084FC', type: 'expense' }, 
             '娛樂': { icon: '🎤', color: '#818CF8', type: 'expense' },
             '學習': { icon: '📚', color: '#FDBA74', type: 'expense' }, 
             '醫療': { icon: '💊', color: '#FDA4AF', type: 'expense' }, 
             '投資': { icon: '📈', color: '#34D399', type: 'expense' },
             '繳費訂閱': { icon: '📱', color: '#D8B4E2', type: 'expense' },
+            '交際送禮': { icon: '🎁', color: '#FCA5A5', type: 'expense' },
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
-            '日用': { icon: '🧴', color: '#A7F3D0', type: 'expense', hidden: true },
-            '固定支出': { icon: '📱', color: '#D8B4E2', type: 'expense', hidden: true },
-            '住宿': { icon: '🏠', color: '#9CA3AF', type: 'expense', hidden: true },
+
             '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
             '薪資': { icon: '💰', color: '#22c55e', type: 'income' },
-            '退款': { icon: '🧾', color: '#34d399', type: 'income' },
-            '其他收入': { icon: '🎁', color: '#a7f3d0', type: 'income' }
+            '其他收入': { icon: '💵', color: '#a7f3d0', type: 'income' },
+
+            // 舊資料隱藏防呆
+            '飲食': { hidden: true, type: 'expense' },
+            '日用': { hidden: true, type: 'expense' },
+            '服飾美妝': { hidden: true, type: 'expense' },
+            '住宿': { hidden: true, type: 'expense' },
+            '固定支出': { hidden: true, type: 'expense' },
+            '退款': { hidden: true, type: 'income' }
         };
 
         let categoryConfig = JSON.parse(localStorage.getItem('cbank_categories')) || defaultCategories;
@@ -358,7 +386,7 @@
                 
                 const html = `
                     <label class="cursor-pointer group">
-                        <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '飲食' ? 'checked' : ''}>
+                        <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '正餐' ? 'checked' : ''}>
                         <div class="aspect-square p-2 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#E8EEF9] peer-checked:border-[#92A8D1] transition-all flex flex-col items-center justify-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/20">
                             <span class="text-2xl transition-transform peer-checked:scale-110 drop-shadow-sm">${conf.icon}</span>
                             <span class="text-[10px] font-bold text-gray-400 peer-checked:text-[#6A85B6] leading-none mt-1 truncate w-full text-center px-0.5">${cat}</span>
@@ -367,7 +395,6 @@
                 if (conf.type === 'expense') expenseHtml += html; else incomeHtml += html;
             });
 
-            // 加入自訂按鈕
             expenseHtml += `
                 <div onclick="addCategory('expense')" class="aspect-square p-2 rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95">
                     <span class="text-xl text-gray-300">➕</span>
@@ -382,12 +409,11 @@
             document.getElementById('expense-categories').innerHTML = expenseHtml; document.getElementById('income-categories').innerHTML = incomeHtml;
         }
 
-        // 🌟 新增分類功能
         function addCategory(type) {
-            const name = prompt(`請輸入新的${type==='expense'?'支出':'收入'}分類名稱：\n(例如：消夜)`);
+            const name = prompt(`請輸入新的${type==='expense'?'支出':'收入'}分類名稱：`);
             if (!name) return;
             if (categoryConfig[name]) { alert('這個分類已經存在囉！'); return; }
-            let icon = prompt('請輸入一個代表符號 (Emoji)：\n(例如：🍜)');
+            let icon = prompt('請輸入一個代表符號 (Emoji)：');
             if (!icon) icon = '✨';
             
             categoryConfig[name] = { icon: icon, color: type==='expense' ? '#9CA3AF' : '#34d399', type: type };
@@ -395,6 +421,62 @@
             
             incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
             renderCategoryGrid();
+        }
+
+        // 🌟 全新：管理清單渲染與刪除邏輯
+        function openManageModal() {
+            document.getElementById('modal-manage').classList.remove('hidden-view');
+            renderManageLists();
+        }
+
+        function closeManageModal() {
+            document.getElementById('modal-manage').classList.add('hidden-view');
+            renderCategoryGrid();
+            renderPaymentMethods();
+        }
+
+        function renderManageLists() {
+            let payHtml = '';
+            paymentMethods.forEach((p, idx) => {
+                payHtml += `<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <span class="font-bold text-sm text-gray-700">${p}</span>
+                    <button onclick="removePayment(${idx})" class="text-red-400 text-xl font-bold px-2 active:scale-90 transition-transform">&times;</button>
+                </div>`;
+            });
+            document.getElementById('manage-payment-list').innerHTML = payHtml;
+
+            let catHtml = '';
+            Object.keys(categoryConfig).forEach(cat => {
+                if(categoryConfig[cat].hidden) return;
+                const conf = categoryConfig[cat];
+                const typeLabel = conf.type === 'expense' ? '支出' : '收入';
+                const labelColor = conf.type === 'expense' ? 'text-[#92A8D1]' : 'text-[#F7CAC9]';
+                catHtml += `<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">${conf.icon}</span>
+                        <span class="font-bold text-sm text-gray-700">${cat}</span>
+                        <span class="text-[10px] font-bold ${labelColor} bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">${typeLabel}</span>
+                    </div>
+                    <button onclick="removeCategory('${cat}')" class="text-red-400 text-xl font-bold px-2 active:scale-90 transition-transform">&times;</button>
+                </div>`;
+            });
+            document.getElementById('manage-category-list').innerHTML = catHtml;
+        }
+
+        function removePayment(idx) {
+            if(confirm('確定要刪除這個付款方式嗎？')) {
+                paymentMethods.splice(idx, 1);
+                localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
+                renderManageLists();
+            }
+        }
+
+        function removeCategory(cat) {
+            if(confirm('確定要在記帳網格中隱藏這個分類嗎？\n(別擔心，歷史紀錄依然會保留喔！)')) {
+                categoryConfig[cat].hidden = true;
+                localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig));
+                renderManageLists();
+            }
         }
 
         function saveBudget() {
@@ -457,18 +539,16 @@
             document.getElementById('delete-modal').classList.remove('hidden-view'); 
         }
 
-        // 🌟 匯出為 Excel CSV 功能
         function exportToCSV() {
             if (allRecords.length === 0) {
-                alert("目前沒有任何紀錄可以匯出喔！");
-                return;
+                alert("目前沒有任何紀錄可以匯出喔！"); return;
             }
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
             csvContent += "日期,收支,分類,付款方式,紀錄金額,幣別,台幣等值,備註\n";
             
             allRecords.forEach(r => {
                 const type = incomeCategories.includes(r.category) ? "收入" : "支出";
-                const note = r.note ? r.note.replace(/,/g, "，") : ""; // 避免逗號破壞表格
+                const note = r.note ? r.note.replace(/,/g, "，") : ""; 
                 const row = `${r.record_date},${type},${r.category},${r.payment_method},${r.amount},${r.currency},${r.amount_twd},${note}`;
                 csvContent += row + "\n";
             });
@@ -494,7 +574,7 @@
             currentEditingId = null; document.getElementById('modal-title').innerText = '新增紀錄 💸';
             document.getElementById('btn-submit').innerText = '儲存'; document.getElementById('btn-delete').classList.add('hidden-view'); 
             document.getElementById('amount').value = ''; document.getElementById('note').value = ''; document.getElementById('record_date').value = selectedDateStr;
-            const defaultRadio = document.querySelector('input[name="category"][value="飲食"]'); if(defaultRadio) defaultRadio.checked = true;
+            const defaultRadio = document.querySelector('input[name="category"][value="正餐"]'); if(defaultRadio) defaultRadio.checked = true;
             document.getElementById('modal-input').classList.remove('hidden-view'); 
             setTimeout(() => { document.getElementById('modal-scroll-area').scrollTop = 0; }, 10);
         }
@@ -503,7 +583,6 @@
             currentEditingId = id; const record = allRecords.find(r => String(r.id) === String(id)); if(!record) return;
             document.getElementById('currency').value = record.currency; document.getElementById('amount').value = record.amount;
             
-            // 如果原本的付款方式被刪掉或不在清單裡，自動補回去以免變空白
             if (!paymentMethods.includes(record.payment_method)) {
                 paymentMethods.push(record.payment_method);
                 localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
@@ -511,16 +590,31 @@
             }
             document.getElementById('payment_method').value = record.payment_method; 
             document.getElementById('record_date').value = record.record_date; document.getElementById('note').value = record.note || '';
+            
+            // 如果歷史分類被隱藏，臨時放出來給編輯頁面選取
+            if(categoryConfig[record.category] && categoryConfig[record.category].hidden) {
+                categoryConfig[record.category].hidden = false;
+                renderCategoryGrid();
+            }
+
             const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`); if(catRadio) catRadio.checked = true;
             document.getElementById('modal-title').innerText = '編輯紀錄 ✍️'; document.getElementById('btn-submit').innerText = '儲存修改';
             document.getElementById('btn-delete').classList.remove('hidden-view'); document.getElementById('modal-input').classList.remove('hidden-view');
             setTimeout(() => { document.getElementById('modal-scroll-area').scrollTop = 0; }, 10);
         }
 
-        function closeModal() { document.getElementById('modal-input').classList.add('hidden-view'); }
+        function closeModal() { 
+            document.getElementById('modal-input').classList.add('hidden-view'); 
+            // 關閉時重整網格（隱藏不該顯示的歷史分類）
+            renderCategoryGrid();
+        }
 
         function switchTab(tabName) {
-            window.scrollTo({ top: 0, behavior: 'instant' });
+            // 🌟 強制切換分頁時，回到最頂端！
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0; 
+            document.documentElement.scrollTop = 0;
+            
             document.querySelectorAll('main').forEach(m => m.classList.add('hidden-view'));
             document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-[#92A8D1]', 'text-gray-400'));
             document.getElementById('view-' + tabName).classList.remove('hidden-view'); document.getElementById('tab-' + tabName).classList.replace('text-gray-400', 'text-[#92A8D1]');
@@ -616,15 +710,14 @@
             });
         }
 
-        // 🌟 加入 MINITEEN 陪伴文字彩蛋
+        // 🌟 移除多餘羞恥文字
         function renderDailyDetails(dateStr) {
             const container = document.getElementById('daily-details-container');
             const dailyRecords = allRecords.filter(r => r.record_date === dateStr);
             const d = new Date(dateStr); const days = ['日', '一', '二', '三', '四', '五', '六'];
             const dateTitle = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
             if (dailyRecords.length === 0) {
-                container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div>
-                <div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold flex flex-col gap-1">這天沒有花費紀錄喔！🏝️<span class="text-[10px] text-[#92A8D1] opacity-80">MINITEEN 都在為你加油！💎</span></div>`;
+                container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold">這個月還沒有花費喔！🏝️</div>`;
                 return;
             }
             let dailyExpenseTwd = 0; let dailyIncomeTwd = 0; let listHTML = '';
@@ -637,7 +730,7 @@
 
                 const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
-                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent">
+                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent overflow-hidden">
                         <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer z-0" onclick="confirmDirectDelete(event, '${r.id}')">
                             <span class="active:scale-90 transition-transform">🗑️</span>
                         </div>
@@ -691,18 +784,19 @@
             const msgEl = document.getElementById('budget-message');
             barEl.style.width = `${progress}%`;
             
+            // 🌟 降低恥度，正常微甜的預算提醒
             if(progress > 80) {
                 barEl.className = 'h-full rounded-full transition-all duration-700 bg-red-400';
                 msgEl.className = 'text-xs font-bold text-red-500 bg-red-50 p-2.5 rounded-xl text-center transition-all duration-500';
-                msgEl.innerText = '🍒 忍耐一下！想想未來的首爾場呀...';
+                msgEl.innerText = '🍒 預算即將超支，勝哲說不能再亂花錢囉！';
             } else if(progress > 50) {
                 barEl.className = 'h-full rounded-full transition-all duration-700 bg-orange-400';
                 msgEl.className = 'text-xs font-bold text-orange-500 bg-orange-50 p-2.5 rounded-xl text-center transition-all duration-500';
-                msgEl.innerText = '🍒 總管大人的溫馨提醒：預算過半囉。';
+                msgEl.innerText = '🍒 預算已經過半，請注意接下來的花費。';
             } else {
                 barEl.className = 'h-full rounded-full transition-all duration-700 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]';
                 msgEl.className = 'text-xs font-bold text-[#6A85B6] bg-[#E8EEF9] p-2.5 rounded-xl text-center transition-all duration-500';
-                msgEl.innerText = '🍒 步調很完美，這個月也能好好生活呢。';
+                msgEl.innerText = '🍒 預算控制得很完美，繼續保持！';
             }
 
             const prefix = displayCurrency === 'TWD' ? 'NT$' : '₩';
@@ -727,9 +821,9 @@
                     </div>
                 </div>`;
             });
-            if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold flex flex-col gap-1">這個月還沒有支出紀錄喔！<span class="text-[10px] text-[#92A8D1] opacity-80">讓 MINITEEN 幫你守住錢包 💎</span></div>`;
+            if(totalExpense === 0) listHTML = `<div class="text-center text-gray-400 py-6 text-sm font-bold">這個月還沒有支出紀錄喔！</div>`;
             document.getElementById('stats-list').innerHTML = listHTML;
-            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC', '#818CF8', '#FDBA74', '#FDA4AF', '#D8B4E2', '#9CA3AF', '#FBCFE8'];
+            const svtChartColors = ['#92A8D1', '#F7CAC9', '#FDE047', '#A7F3D0', '#E5E7EB', '#C084FC', '#818CF8', '#FDBA74', '#FDA4AF', '#D8B4E2', '#9CA3AF', '#FBCFE8', '#34D399', '#FCA5A5'];
             const ctx = document.getElementById('myDonutChart').getContext('2d');
             if (myDonutChart) myDonutChart.destroy(); 
             myDonutChart = new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ data: values.length > 0 ? values : [1], backgroundColor: values.length > 0 ? svtChartColors.slice(0, labels.length) : ['#f3f4f6'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { if(totalExpense === 0) return ' 無資料'; return ` ${prefix}${context.parsed.toLocaleString()}`; } } } } } });
@@ -757,7 +851,7 @@
                     <span class="font-black text-[#92A8D1] text-base">NT$ ${paySums[method].toLocaleString()}</span>
                 </div>`;
             });
-            if (totalTwd === 0) listHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold flex flex-col gap-1">這個月還沒有花費喔！<span class="text-[10px] text-[#92A8D1] opacity-80">小金庫被 MINITEEN 保護得很好✨</span></div>`;
+            if (totalTwd === 0) listHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">這個月還沒有花費喔！</div>`;
             document.getElementById('wallet-list').innerHTML = listHTML;
         }
 
@@ -840,7 +934,7 @@
                 if (dateA !== dateB) return dateB - dateA; return b.id - a.id; 
             });
             if (results.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold flex flex-col gap-1">找不到相關紀錄 🥲<span class="text-[10px] text-[#92A8D1] opacity-80">換個關鍵字讓 MINITEEN 幫你找找看！</span></div>`;
+                container.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm font-bold">找不到相關紀錄 🥲</div>`;
                 return;
             }
             let html = `<div class="text-xs font-black text-gray-400 mb-3 px-1">💎 找到 ${results.length} 筆紀錄</div>`;
