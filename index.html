@@ -33,9 +33,9 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="text-gray-800 font-sans selection:bg-[#F7CAC9] selection:text-white pb-40">
+<body class="text-gray-800 font-sans selection:bg-[#F7CAC9] selection:text-white pb-32">
 
-    <div class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-lg relative">
+    <div class="max-w-md mx-auto bg-gray-50 min-h-screen relative">
         
         <header class="bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] text-white p-5 text-center sticky top-0 z-40 shadow-md rounded-b-3xl border-b-4 border-white/30">
             <h1 class="text-2xl font-black tracking-widest drop-shadow-md flex justify-center items-center gap-2">
@@ -106,20 +106,26 @@
 
         <main id="view-wallet" class="p-4 hidden-view">
             
-            <div class="bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-[24px] shadow-md p-6 mb-6 text-white relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 text-6xl opacity-10">💱</div>
-                <h3 class="text-xs font-black opacity-80 mb-4 uppercase tracking-wider flex items-center gap-1"><span>💱</span> 雙向匯率計算機 <span id="calc-rate-hint" class="text-[8px] bg-white/20 px-1.5 py-0.5 rounded">即時</span></h3>
+            <div class="bg-gradient-to-tr from-gray-800 to-gray-900 rounded-[24px] shadow-xl p-6 mb-6 text-white relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full border-4 border-white/10"></div>
+                <div class="absolute -right-2 -bottom-2 w-24 h-24 rounded-full border-4 border-white/10"></div>
                 
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex-1 bg-white/10 rounded-xl p-3 border border-white/20 focus-within:border-white transition-colors">
-                        <div class="text-[10px] font-bold opacity-80 mb-1">韓元 (KRW)</div>
-                        <input type="number" id="calc-krw" oninput="calcExchange('krw')" class="w-full bg-transparent text-xl font-black outline-none placeholder-white/40" placeholder="0">
+                <div class="flex justify-between items-start mb-6 relative z-10">
+                    <div class="text-[10px] font-bold text-gray-400 tracking-widest uppercase">C. BANK Platinum</div>
+                    <div class="text-2xl opacity-80 drop-shadow-md">💳</div>
+                </div>
+                
+                <div class="relative z-10 mb-4">
+                    <div class="text-[10px] text-gray-400 font-bold mb-1 tracking-wider">本月卡片總帳單</div>
+                    <div class="text-3xl font-black tracking-wider text-white drop-shadow-md" id="wallet-total-card">NT$ 0</div>
+                </div>
+                
+                <div class="flex justify-between items-end relative z-10">
+                    <div>
+                        <div class="text-[8px] text-gray-400 uppercase tracking-widest mb-0.5">Cardholder</div>
+                        <div class="text-xs font-bold tracking-widest uppercase text-gray-200">S.COUPS' CARAT</div>
                     </div>
-                    <div class="text-xl opacity-80">⇌</div>
-                    <div class="flex-1 bg-white/10 rounded-xl p-3 border border-white/20 focus-within:border-white transition-colors">
-                        <div class="text-[10px] font-bold opacity-80 mb-1">台幣 (TWD)</div>
-                        <input type="number" id="calc-twd" oninput="calcExchange('twd')" class="w-full bg-transparent text-xl font-black outline-none placeholder-white/40" placeholder="0">
-                    </div>
+                    <div class="text-xl">🍒</div>
                 </div>
             </div>
 
@@ -129,7 +135,7 @@
                     <h2 id="wallet-month-label" class="text-lg font-bold text-gray-800">2026 / 07</h2>
                     <button onclick="changeWalletMonth(1)" class="p-2 text-gray-400 hover:text-[#92A8D1] rounded-full font-bold transition-colors">&gt;</button>
                 </div>
-                <h3 class="text-xs font-black text-gray-400 mb-4 uppercase tracking-wider px-1">本月各付款方式總額</h3>
+                <h3 class="text-xs font-black text-gray-400 mb-4 uppercase tracking-wider px-1">本月各付款方式明細</h3>
                 <div id="wallet-list" class="space-y-3"></div>
             </div>
         </main>
@@ -149,10 +155,10 @@
                 <div id="tools-menu" class="space-y-3">
                     <h3 class="text-xs font-black text-gray-400 mb-2 mt-4 uppercase tracking-wider px-1">克拉必備小工具</h3>
                     
-                    <div onclick="window.open('https://forms.gle/CizB4A9W6t6Wn4sq8', '_blank')" class="bg-gray-50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#F7CAC9]/20 transition-colors active:scale-95 border border-dashed border-gray-300">
+                    <div onclick="window.open('https://forms.gle/CizB4A9W6t6Wn4sq8', '_blank')" class="bg-white rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors active:scale-95 shadow-sm border border-gray-100">
                         <div class="flex items-center gap-3">
                             <span class="text-2xl drop-shadow-sm">📝</span>
-                            <span class="font-bold text-gray-700">追星周邊總庫</span>
+                            <span class="font-bold text-gray-700">追星周邊紀錄</span>
                         </div>
                         <span class="text-[#92A8D1] font-bold text-sm">前往 &raquo;</span>
                     </div>
@@ -174,6 +180,14 @@
                         </div>
                         <span id="live-rate-display" class="text-[10px] font-bold text-[#92A8D1] bg-[#92A8D1]/10 px-2 py-1 rounded">連線中...</span>
                     </div>
+
+                    <div onclick="exportToCSV()" class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors active:scale-95 mt-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">📥</span>
+                            <span class="font-bold text-gray-600 text-sm">匯出為 Excel (CSV)</span>
+                        </div>
+                        <span class="text-green-500 font-bold text-lg">&rsaquo;</span>
+                    </div>
                 </div>
             </div>
         </main>
@@ -181,7 +195,7 @@
         <div id="modal-input" class="fixed inset-0 z-[60] flex flex-col justify-end hidden-view">
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
             
-            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[96vh] overflow-y-auto animate-slide-up no-scrollbar">
+            <div id="modal-scroll-area" class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
                 <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
                 <button onclick="closeModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
                 <h2 id="modal-title" class="text-lg font-black text-gray-800 mb-5 ml-1">新增紀錄 💸</h2>
@@ -216,7 +230,7 @@
                                 <optgroup label="現金與行動支付">
                                     <option value="現金">💵 現金</option>
                                     <option value="LINE PAY">🟢 LINE PAY</option>
-                                    <option value="帳戶扣款">🏦 銀行帳戶</option>
+                                    <option value="銀行帳戶">🏦 銀行帳戶</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -245,7 +259,7 @@
 
         <div id="modal-drilldown" class="fixed inset-0 z-[60] flex flex-col justify-end hidden-view">
             <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeDrilldownModal()"></div>
-            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-2xl h-[85vh] overflow-y-auto animate-slide-up no-scrollbar">
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
                 <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
                 <button onclick="closeDrilldownModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
                 <h2 id="drilldown-title" class="text-lg font-black text-gray-800 mb-5 ml-1 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] bg-clip-text text-transparent">明細總覽</h2>
@@ -253,7 +267,7 @@
             </div>
         </div>
 
-        <button onclick="openAddModal()" class="fixed bottom-28 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_8px_25px_rgba(146,168,209,0.5)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
+        <button onclick="openAddModal()" class="fixed bottom-28 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_4px_15px_rgba(146,168,209,0.4)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
             <span class="text-3xl font-black mb-1">+</span>
         </button>
 
@@ -305,19 +319,6 @@
             }
         }
 
-        // 🌟 匯率計算機邏輯
-        function calcExchange(source) {
-            const krwInput = document.getElementById('calc-krw');
-            const twdInput = document.getElementById('calc-twd');
-            if(source === 'krw') {
-                const krw = parseFloat(krwInput.value) || 0;
-                twdInput.value = Math.round(krw * KRW_RATE);
-            } else {
-                const twd = parseFloat(twdInput.value) || 0;
-                krwInput.value = Math.round(twd / KRW_RATE);
-            }
-        }
-
         function getLocalDateStr(date = new Date()) {
             const tzOffset = date.getTimezoneOffset() * 60000;
             return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
@@ -335,15 +336,20 @@
             '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
             '飲料': { icon: '🧋', color: '#FBCFE8', type: 'expense' },
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
-            '日用': { icon: '🧴', color: '#A7F3D0', type: 'expense' }, 
+            '生活日用': { icon: '🧴', color: '#A7F3D0', type: 'expense' }, 
             '服飾美妝': { icon: '🛍️', color: '#FDE047', type: 'expense' }, 
             '追星': { icon: '💎', color: '#C084FC', type: 'expense' }, 
             '娛樂': { icon: '🎤', color: '#818CF8', type: 'expense' },
             '學習': { icon: '📚', color: '#FDBA74', type: 'expense' }, 
             '醫療': { icon: '💊', color: '#FDA4AF', type: 'expense' }, 
-            '固定支出': { icon: '📱', color: '#D8B4E2', type: 'expense' },
-            '住宿': { icon: '🏠', color: '#9CA3AF', type: 'expense' },
+            '投資': { icon: '📈', color: '#34D399', type: 'expense' },
+            '繳費訂閱': { icon: '📱', color: '#D8B4E2', type: 'expense' },
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
+
+            '日用': { icon: '🧴', color: '#A7F3D0', type: 'expense', hidden: true },
+            '固定支出': { icon: '📱', color: '#D8B4E2', type: 'expense', hidden: true },
+            '住宿': { icon: '🏠', color: '#9CA3AF', type: 'expense', hidden: true },
+
             '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
             '薪資': { icon: '💰', color: '#22c55e', type: 'income' },
             '退款': { icon: '🧾', color: '#34d399', type: 'income' },
@@ -354,6 +360,8 @@
             let expenseHtml = ''; let incomeHtml = '';
             Object.keys(categoryConfig).forEach(cat => {
                 const conf = categoryConfig[cat];
+                if (conf.hidden) return; 
+                
                 const html = `
                     <label class="cursor-pointer group">
                         <input type="radio" name="category" value="${cat}" class="peer hidden" ${cat === '飲食' ? 'checked' : ''}>
@@ -377,6 +385,7 @@
             document.getElementById('budget-input').value = saved;
         }
 
+        // 🌟 修正：防止滑動刪除穿透觸發編輯頁面
         let startX, startY;
         let activeSwipeItem = null;
         
@@ -410,16 +419,50 @@
             let currentX = 0;
             if(currentTransform.includes('translateX')) { currentX = parseFloat(currentTransform.replace('translateX(', '').replace('px)', '')); }
             if (currentX < -40) { activeSwipeItem.style.transform = 'translateX(-80px)'; } 
-            else { activeSwipeItem.style.transform = 'translateX(0)'; activeSwipeItem = null; } 
+            else { activeSwipeItem.style.transform = 'translateX(0px)'; activeSwipeItem = null; } 
         });
 
+        // 🌟 優化的防穿透判定
         function handleItemClick(e, id) {
             const item = e.currentTarget;
-            if (item.style.transform === 'translateX(-80px)') { item.style.transform = 'translateX(0)'; return; }
+            if (item.style.transform && item.style.transform !== 'translateX(0px)' && item.style.transform !== 'translateX(0)') { 
+                item.style.transform = 'translateX(0px)'; return; 
+            }
             openEditModal(id);
         }
 
-        function confirmDirectDelete(id) { currentEditingId = id; document.getElementById('delete-modal').classList.remove('hidden-view'); }
+        // 🌟 垃圾桶點擊事件加入 event.stopPropagation() 防穿透
+        function confirmDirectDelete(event, id) { 
+            if(event) { event.preventDefault(); event.stopPropagation(); }
+            currentEditingId = id; 
+            document.getElementById('delete-modal').classList.remove('hidden-view'); 
+        }
+
+        // 🌟 一鍵匯出 CSV (Excel)
+        function exportToCSV() {
+            if (allRecords.length === 0) {
+                alert("目前沒有任何紀錄可以匯出喔！");
+                return;
+            }
+            // 加上 BOM 避免 Excel 亂碼
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+            csvContent += "日期,收支,分類,付款方式,紀錄金額,幣別,台幣等值,備註\n";
+            
+            allRecords.forEach(r => {
+                const type = incomeCategories.includes(r.category) ? "收入" : "支出";
+                const note = r.note ? r.note.replace(/,/g, "，") : ""; // 避免逗號破壞表格
+                const row = `${r.record_date},${type},${r.category},${r.payment_method},${r.amount},${r.currency},${r.amount_twd},${note}`;
+                csvContent += row + "\n";
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `C_BANK_紀錄_${getLocalDateStr()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
         function changeCalendarCurrency(currency) {
             calendarDisplayCurrency = currency;
@@ -435,6 +478,7 @@
             document.getElementById('amount').value = ''; document.getElementById('note').value = ''; document.getElementById('record_date').value = selectedDateStr;
             const defaultRadio = document.querySelector('input[name="category"][value="飲食"]'); if(defaultRadio) defaultRadio.checked = true;
             document.getElementById('modal-input').classList.remove('hidden-view'); 
+            setTimeout(() => { document.getElementById('modal-scroll-area').scrollTop = 0; }, 10);
         }
 
         function openEditModal(id) {
@@ -444,11 +488,13 @@
             const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`); if(catRadio) catRadio.checked = true;
             document.getElementById('modal-title').innerText = '編輯紀錄 ✍️'; document.getElementById('btn-submit').innerText = '儲存修改';
             document.getElementById('btn-delete').classList.remove('hidden-view'); document.getElementById('modal-input').classList.remove('hidden-view');
+            setTimeout(() => { document.getElementById('modal-scroll-area').scrollTop = 0; }, 10);
         }
 
         function closeModal() { document.getElementById('modal-input').classList.add('hidden-view'); }
 
         function switchTab(tabName) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
             document.querySelectorAll('main').forEach(m => m.classList.add('hidden-view'));
             document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-[#92A8D1]', 'text-gray-400'));
             document.getElementById('view-' + tabName).classList.remove('hidden-view'); document.getElementById('tab-' + tabName).classList.replace('text-gray-400', 'text-[#92A8D1]');
@@ -484,7 +530,7 @@
             const record = {
                 currency: document.getElementById('currency').value, amount: Number(document.getElementById('amount').value),
                 payment_method: document.getElementById('payment_method').value, record_date: document.getElementById('record_date').value,
-                category: selectedCategory, note: document.getElementById('note').value
+                category: selectedCategory, note: document.getElementById('note').value,
             };
             record.amount_twd = record.currency === 'KRW' ? Math.round(record.amount * KRW_RATE) : record.amount;
             selectedDateStr = record.record_date; 
@@ -542,7 +588,6 @@
             });
         }
 
-        // 🌟 恢復乾淨明亮、不雙幣同顯的卡片設計
         function renderDailyDetails(dateStr) {
             const container = document.getElementById('daily-details-container');
             const dailyRecords = allRecords.filter(r => r.record_date === dateStr);
@@ -562,8 +607,8 @@
 
                 const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
-                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent">
-                        <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer" onclick="confirmDirectDelete('${r.id}')">
+                    <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent overflow-hidden">
+                        <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer z-0" onclick="confirmDirectDelete(event, '${r.id}')">
                             <span class="active:scale-90 transition-transform">🗑️</span>
                         </div>
                         <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-[20px] shadow-sm border border-gray-100 p-4 flex items-center justify-between cursor-pointer">
@@ -669,11 +714,17 @@
             const startDate = `${year}-${month}-01`; const endDate = new Date(year, currentWalletDate.getMonth() + 1, 0).toISOString().split('T')[0];
             const { data } = await db.from('ledger').select('*').gte('record_date', startDate).lte('record_date', endDate);
             
-            const paySums = {}; let totalTwd = 0;
+            const paySums = {}; let totalTwd = 0; let monthlyTotalExpense = 0;
             data.filter(item => !incomeCategories.includes(item.category)).forEach(item => {
                 const method = item.payment_method || '未分類';
-                paySums[method] = (paySums[method] || 0) + item.amount_twd; totalTwd += item.amount_twd;
+                paySums[method] = (paySums[method] || 0) + item.amount_twd; 
+                totalTwd += item.amount_twd;
+                monthlyTotalExpense += item.amount_twd;
             });
+            
+            // 更新黑卡總金額
+            document.getElementById('wallet-total-card').innerText = `NT$ ${monthlyTotalExpense.toLocaleString()}`;
+
             let listHTML = '';
             Object.keys(paySums).sort((a, b) => paySums[b] - paySums[a]).forEach(method => {
                 listHTML += `
@@ -700,7 +751,6 @@
             renderDrilldownList(`💳 ${method} · 當月刷卡明細`, records);
         }
 
-        // 🌟 恢復乾淨的明細穿透清單
         function renderDrilldownList(title, records) {
             document.getElementById('drilldown-title').innerText = title;
             const container = document.getElementById('drilldown-list');
@@ -722,8 +772,8 @@
                     const dateDisplay = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
                     const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
                     html += `
-                        <div class="relative mb-3 rounded-[16px] bg-red-50 border border-transparent">
-                            <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer" onclick="confirmDirectDelete('${r.id}')">
+                        <div class="relative mb-3 rounded-[16px] bg-red-50 border border-transparent overflow-hidden">
+                            <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer z-0" onclick="confirmDirectDelete(event, '${r.id}')">
                                 <span class="active:scale-90 transition-transform">🗑️</span>
                             </div>
                             <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-[16px] p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 cursor-pointer">
@@ -748,7 +798,6 @@
 
         function closeDrilldownModal() { document.getElementById('modal-drilldown').classList.add('hidden-view'); }
 
-        // 🌟 恢復乾淨的搜尋結果清單
         function executeSearch() {
             const keyword = document.getElementById('search-input').value.toLowerCase().trim();
             const container = document.getElementById('search-results-list');
@@ -784,8 +833,8 @@
                 const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
 
                 html += `
-                    <div class="relative mb-3 rounded-2xl bg-red-50 border border-transparent">
-                        <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer" onclick="confirmDirectDelete('${r.id}')">
+                    <div class="relative mb-3 rounded-2xl bg-red-50 border border-transparent overflow-hidden">
+                        <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer z-0" onclick="confirmDirectDelete(event, '${r.id}')">
                             <span class="active:scale-90 transition-transform">🗑️</span>
                         </div>
                         <div onclick="handleItemClick(event, '${r.id}')" class="swipeable-item relative z-10 bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:border-[#92A8D1]/30 cursor-pointer">
