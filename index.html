@@ -169,14 +169,6 @@
                         <span id="live-rate-display" class="text-[10px] font-bold text-[#92A8D1] bg-[#92A8D1]/10 px-2 py-1 rounded">連線中...</span>
                     </div>
 
-                    <div onclick="openManageModal()" class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors active:scale-95 mt-2">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xl">⚙️</span>
-                            <span class="font-bold text-gray-600 text-sm">分類與付款管理</span>
-                        </div>
-                        <span class="text-gray-400 font-bold text-lg">&rsaquo;</span>
-                    </div>
-
                     <div onclick="exportToCSV()" class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors active:scale-95 mt-2">
                         <div class="flex items-center gap-3">
                             <span class="text-xl">📥</span>
@@ -222,19 +214,15 @@
 
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                         <label class="block text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">選擇分類</label>
-                        <div class="grid grid-cols-4 gap-3 mb-4" id="expense-categories"></div>
-                        <div class="border-t border-dashed border-gray-200 pt-3">
-                            <div class="grid grid-cols-4 gap-3" id="income-categories"></div>
-                        </div>
+                        <div class="grid grid-cols-4 gap-3 mb-1" id="all-categories"></div>
                     </div>
 
-                    <!-- 🌟 升級版備註區塊：加入快速小標籤容器 -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 focus-within:border-[#F7CAC9] transition-colors">
                         <div class="flex justify-between items-end mb-2">
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">備註 (選填)</label>
+                            <!-- 🌟 移除選填字樣，版面更極簡 -->
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">備註</label>
                         </div>
                         
-                        <!-- 快速標籤會生在這裡 -->
                         <div id="quick-tags-container" class="flex flex-wrap gap-1.5 mb-3 hidden-view"></div>
                         
                         <input type="text" id="note" placeholder="寫點什麼..." class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent placeholder-gray-300">
@@ -258,26 +246,11 @@
             </div>
         </div>
 
-        <div id="modal-manage" class="fixed inset-0 z-[80] flex flex-col justify-end hidden-view">
-            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeManageModal()"></div>
-            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
-                <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-                <button onclick="closeManageModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
-                <h2 class="text-lg font-black text-gray-800 mb-5 ml-1">分類與付款管理 ⚙️</h2>
-                
-                <h3 class="text-xs font-black text-[#92A8D1] mb-2 uppercase tracking-wider px-1">付款方式列表</h3>
-                <div id="manage-payment-list" class="space-y-2 mb-6"></div>
-
-                <h3 class="text-xs font-black text-[#F7CAC9] mb-2 uppercase tracking-wider px-1">記帳分類列表</h3>
-                <div id="manage-category-list" class="space-y-2 pb-6"></div>
-            </div>
-        </div>
-
         <button id="add-btn-main" onclick="openAddModal()" class="fixed bottom-28 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_4px_15px_rgba(146,168,209,0.4)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
             <span class="text-3xl font-black mb-1">+</span>
         </button>
 
-        <nav class="fixed bottom-0 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-gray-100 flex justify-between items-center px-4 pt-2 pb-6 z-40">
+        <nav class="fixed bottom-0 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-gray-100 flex justify-between items-center px-4 pt-2 pb-6 z-40 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
             <button onclick="switchTab('calendar')" id="tab-calendar" class="flex flex-col items-center p-2 text-[#92A8D1] transition-colors w-1/4">
                 <span class="text-xl mb-1">📅</span><span class="text-[10px] font-bold">記帳本</span>
             </button>
@@ -374,7 +347,6 @@
             }
         }
         
-        // 🌟 1. 韓國留學定案版 9 大分類
         const defaultCategories = {
             '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
@@ -385,24 +357,11 @@
             '固定繳費': { icon: '📱', color: '#D8B4E2', type: 'expense' },
             '醫療': { icon: '💊', color: '#FDA4AF', type: 'expense' }, 
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
-
             '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
             '薪資': { icon: '💰', color: '#22c55e', type: 'income' },
-            '其他收入': { icon: '💵', color: '#a7f3d0', type: 'income' },
-
-            // 舊資料防呆隱藏區 (歷史紀錄會用到，但網格隱藏)
-            '正餐': { icon: '🍱', color: '#F7CAC9', type: 'expense', hidden: true },
-            '飲料': { icon: '🧋', color: '#FBCFE8', type: 'expense', hidden: true },
-            '甜點點心': { icon: '🍰', color: '#FDE68A', type: 'expense', hidden: true },
-            '服飾配件': { icon: '👕', color: '#FDE047', type: 'expense', hidden: true },
-            '美容保養': { icon: '💄', color: '#F9A8D4', type: 'expense', hidden: true },
-            '學習': { icon: '📚', color: '#FDBA74', type: 'expense', hidden: true },
-            '投資': { icon: '📈', color: '#34D399', type: 'expense', hidden: true },
-            '繳費訂閱': { icon: '📱', color: '#D8B4E2', type: 'expense', hidden: true },
-            '交際送禮': { icon: '🎁', color: '#FCA5A5', type: 'expense', hidden: true }
+            '其他收入': { icon: '💵', color: '#a7f3d0', type: 'income' }
         };
 
-        // 🌟 2. 純文字快速小標籤設定檔
         const quickTagsConfig = {
             '飲食': ['早餐', '午餐', '晚餐', '飲料', '點心', '宵夜', '便利商店'],
             '交通': ['地鐵', '公車', '儲值', '計程車'],
@@ -414,22 +373,32 @@
             '醫療': ['藥局', '保健食品', '看病']
         };
 
-        let categoryConfig = JSON.parse(localStorage.getItem('cbank_categories')) || defaultCategories;
+        let categoryConfig = JSON.parse(localStorage.getItem('cbank_categories')) || {};
         
-        // 🚀 自動升級補丁：無痛遷移到全新的 9 大分類
-        ['飲食', '交通', '生活日用', '購物美妝', '追星', '娛樂交際', '固定繳費', '醫療', '其他', '生活費', '薪資', '其他收入'].forEach(cat => {
-            if (!categoryConfig[cat]) { categoryConfig[cat] = defaultCategories[cat]; } 
-            else { categoryConfig[cat].hidden = false; }
+        let newConfig = {};
+        Object.keys(defaultCategories).forEach(cat => {
+            newConfig[cat] = defaultCategories[cat];
         });
-        ['正餐', '飲料', '甜點點心', '服飾配件', '美容保養', '學習', '投資', '繳費訂閱', '交際送禮'].forEach(cat => {
-            if (categoryConfig[cat]) categoryConfig[cat].hidden = true;
+        Object.keys(categoryConfig).forEach(cat => {
+            if (!newConfig[cat]) {
+                newConfig[cat] = categoryConfig[cat];
+                newConfig[cat].hidden = true; 
+            }
         });
+        categoryConfig = newConfig;
         localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig));
 
         let incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
 
-        // 🌟 3. 切換分類時，呼叫快速標籤
+        // 🌟 防呆設計：區分是手動點選，還是系統自動帶入歷史資料
+        let isProgrammaticCategoryChange = false;
+
         function handleCategoryChange(selectedCategory) {
+            // 🌟 如果是使用者自己按分類，就清空備註欄！
+            if (!isProgrammaticCategoryChange) {
+                document.getElementById('note').value = '';
+            }
+
             const container = document.getElementById('quick-tags-container');
             const tags = quickTagsConfig[selectedCategory];
             
@@ -447,10 +416,8 @@
             container.classList.remove('hidden-view');
         }
 
-        // 🌟 4. 點擊小標籤後，自動填入備註
         function appendNote(text) {
             const noteInput = document.getElementById('note');
-            // 如果已經有字，就空一格再加進去；如果沒字就直接貼上
             if (noteInput.value.trim() !== '') {
                 noteInput.value = noteInput.value.trim() + ` ${text}`;
             } else {
@@ -459,129 +426,28 @@
         }
 
         function renderCategoryGrid() {
-            let expenseHtml = ''; let incomeHtml = '';
+            let html = '';
             Object.keys(categoryConfig).forEach(cat => {
                 const conf = categoryConfig[cat];
                 if (conf.hidden) return; 
                 
-                const html = `
+                const isIncome = conf.type === 'income';
+                // 🌟 給收入加上超有質感的翡翠綠底色特效
+                const peerCheckedBg = isIncome ? 'peer-checked:bg-emerald-50' : 'peer-checked:bg-[#E8EEF9]';
+                const peerCheckedBorder = isIncome ? 'peer-checked:border-emerald-400' : 'peer-checked:border-[#92A8D1]';
+                const peerCheckedText = isIncome ? 'peer-checked:text-emerald-600' : 'peer-checked:text-[#6A85B6]';
+                const peerCheckedShadow = isIncome ? 'peer-checked:shadow-emerald-400/20' : 'peer-checked:shadow-[#92A8D1]/20';
+
+                html += `
                     <label class="cursor-pointer group">
-                        <!-- 加入 onchange 事件呼叫快速標籤 -->
-                        <input type="radio" name="category" value="${cat}" class="peer hidden" onchange="handleCategoryChange(this.value)">
-                        <div class="aspect-square p-2 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:bg-[#E8EEF9] peer-checked:border-[#92A8D1] transition-all flex flex-col items-center justify-center gap-1 group-active:scale-95 shadow-sm peer-checked:shadow-[#92A8D1]/20">
+                        <input type="radio" name="category" value="${cat}" class="peer hidden" onchange="handleCategoryChange(this.value)" ${cat === '飲食' ? 'checked' : ''}>
+                        <div class="aspect-square p-2 rounded-2xl bg-gray-50 border-2 border-transparent ${peerCheckedBg} ${peerCheckedBorder} transition-all flex flex-col items-center justify-center gap-1 group-active:scale-95 shadow-sm ${peerCheckedShadow}">
                             <span class="text-2xl transition-transform peer-checked:scale-110 drop-shadow-sm">${conf.icon}</span>
-                            <span class="text-[10px] font-bold text-gray-400 peer-checked:text-[#6A85B6] leading-none mt-1 truncate w-full text-center px-0.5">${cat}</span>
+                            <span class="text-[10px] font-bold text-gray-400 ${peerCheckedText} leading-none mt-1 truncate w-full text-center px-0.5">${cat}</span>
                         </div>
                     </label>`;
-                if (conf.type === 'expense') expenseHtml += html; else incomeHtml += html;
             });
-
-            expenseHtml += `
-                <div onclick="addCategory('expense')" class="aspect-square p-2 rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95">
-                    <span class="text-xl text-gray-300">➕</span>
-                    <span class="text-[10px] font-bold text-gray-400 leading-none mt-1">新增</span>
-                </div>`;
-            incomeHtml += `
-                <div onclick="addCategory('income')" class="aspect-square p-2 rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95">
-                    <span class="text-xl text-gray-300">➕</span>
-                    <span class="text-[10px] font-bold text-gray-400 leading-none mt-1">新增</span>
-                </div>`;
-
-            document.getElementById('expense-categories').innerHTML = expenseHtml; document.getElementById('income-categories').innerHTML = incomeHtml;
-        }
-
-        function addCategory(type) {
-            const name = prompt(`請輸入新的${type==='expense'?'支出':'收入'}分類名稱：`);
-            if (!name) return;
-            if (categoryConfig[name]) { alert('這個分類已經存在囉！'); return; }
-            let icon = prompt('請輸入一個代表符號 (Emoji)：');
-            if (!icon) icon = '✨';
-            
-            categoryConfig[name] = { icon: icon, color: type==='expense' ? '#9CA3AF' : '#34d399', type: type };
-            localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig));
-            
-            incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
-            renderCategoryGrid();
-        }
-
-        function openManageModal() {
-            document.getElementById('modal-manage').classList.remove('hidden-view');
-            renderManageLists();
-        }
-
-        function closeManageModal() {
-            document.getElementById('modal-manage').classList.add('hidden-view');
-            renderCategoryGrid();
-            renderPaymentMethods();
-        }
-
-        function renderManageLists() {
-            let payHtml = '';
-            paymentMethods.forEach((p, idx) => {
-                payHtml += `<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="font-bold text-sm text-gray-700">${p}</span>
-                    <button onclick="removePayment(${idx})" class="text-red-400 text-xl font-bold px-2 active:scale-90 transition-transform">&times;</button>
-                </div>`;
-            });
-            document.getElementById('manage-payment-list').innerHTML = payHtml;
-
-            let catHtml = '';
-            Object.keys(categoryConfig).forEach(cat => {
-                if(categoryConfig[cat].hidden) return;
-                const conf = categoryConfig[cat];
-                const typeLabel = conf.type === 'expense' ? '支出' : '收入';
-                const labelColor = conf.type === 'expense' ? 'text-[#92A8D1]' : 'text-[#F7CAC9]';
-                catHtml += `<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <span class="text-xl">${conf.icon}</span>
-                        <span class="font-bold text-sm text-gray-700">${cat}</span>
-                        <span class="text-[10px] font-bold ${labelColor} bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">${typeLabel}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <button onclick="editCat('${cat}')" class="text-gray-400 text-xl font-bold px-2 active:scale-90 transition-transform">✎</button>
-                        <button onclick="removeCategory('${cat}')" class="text-red-400 text-xl font-bold px-2 active:scale-90 transition-transform">&times;</button>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('manage-category-list').innerHTML = catHtml;
-        }
-
-        async function editCat(oldCat) { 
-            const newName = prompt('修改分類名稱：', oldCat); 
-            if(newName && newName !== oldCat) { 
-                const newIcon = prompt('修改代表 Emoji：', categoryConfig[oldCat].icon) || categoryConfig[oldCat].icon;
-                categoryConfig[newName] = { ...categoryConfig[oldCat], icon: newIcon }; 
-                delete categoryConfig[oldCat]; 
-                localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig)); 
-                incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
-                
-                const { error } = await db.from('ledger').update({ category: newName }).eq('category', oldCat);
-                if (!error) { allRecords.forEach(r => { if(r.category === oldCat) r.category = newName; }); }
-                renderManageLists(); 
-            } else if (newName === oldCat) {
-                const newIcon = prompt('修改代表 Emoji：', categoryConfig[oldCat].icon);
-                if (newIcon && newIcon !== categoryConfig[oldCat].icon) {
-                    categoryConfig[oldCat].icon = newIcon;
-                    localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig));
-                    renderManageLists();
-                }
-            }
-        }
-
-        function removePayment(idx) {
-            if(confirm('確定要刪除這個付款方式嗎？')) {
-                paymentMethods.splice(idx, 1);
-                localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
-                renderManageLists();
-            }
-        }
-
-        function removeCategory(cat) {
-            if(confirm('確定要在記帳網格中隱藏這個分類嗎？\n(別擔心，歷史紀錄依然會保留喔！)')) {
-                categoryConfig[cat].hidden = true;
-                localStorage.setItem('cbank_categories', JSON.stringify(categoryConfig));
-                renderManageLists();
-            }
+            document.getElementById('all-categories').innerHTML = html;
         }
 
         function saveBudget() {
@@ -680,11 +546,13 @@
             document.getElementById('btn-submit').innerText = '儲存'; document.getElementById('btn-delete').classList.add('hidden-view'); 
             document.getElementById('amount').value = ''; document.getElementById('note').value = ''; document.getElementById('record_date').value = selectedDateStr;
             
-            // 🌟 預設選取飲食，並自動叫出快速標籤
             const defaultRadio = document.querySelector('input[name="category"][value="飲食"]'); 
             if(defaultRadio) {
                 defaultRadio.checked = true;
+                // 自動帶入時不清空欄位
+                isProgrammaticCategoryChange = true;
                 handleCategoryChange('飲食');
+                isProgrammaticCategoryChange = false;
             }
             
             document.getElementById('modal-input').classList.remove('hidden-view'); 
@@ -703,16 +571,13 @@
             document.getElementById('payment_method').value = record.payment_method; 
             document.getElementById('record_date').value = record.record_date; document.getElementById('note').value = record.note || '';
             
-            if(categoryConfig[record.category] && categoryConfig[record.category].hidden) {
-                categoryConfig[record.category].hidden = false;
-                renderCategoryGrid();
-            }
-
-            // 🌟 帶入歷史分類，並自動叫出對應的快速標籤
             const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`); 
             if(catRadio) {
                 catRadio.checked = true;
+                // 自動帶入歷史標籤，並保護歷史文字不被清空
+                isProgrammaticCategoryChange = true;
                 handleCategoryChange(record.category);
+                isProgrammaticCategoryChange = false;
             } else {
                 document.getElementById('quick-tags-container').classList.add('hidden-view');
             }
