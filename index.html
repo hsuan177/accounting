@@ -69,8 +69,10 @@
         <main id="view-stats" class="p-4 hidden-view">
             <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 mb-4">
                 <div class="flex justify-between items-end mb-2">
-                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-wider">🎯 預算狀態 (依目前區間)</h3>
-                    <span class="text-[10px] font-bold text-gray-500">NT$ <span id="budget-text">0 / 20,000</span></span>
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-wider">🎯 預算狀態 (點擊數字可設定)</h3>
+                    <span class="text-[10px] font-bold text-gray-500 cursor-pointer hover:text-[#92A8D1] transition-colors" onclick="promptEditMonthlyBudget()">
+                        NT$ <span id="budget-text" class="border-b border-dashed border-gray-300 pb-0.5">0 / 20,000</span>
+                    </span>
                 </div>
                 <div class="w-full bg-gray-100 rounded-full h-3.5 mb-1 overflow-hidden">
                     <div id="budget-bar" class="h-full rounded-full transition-all duration-700 w-0 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9]"></div>
@@ -156,7 +158,7 @@
                     <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="text-xl">💰</span>
-                            <span class="font-bold text-gray-600 text-sm">每月預算基準 (NT$)</span>
+                            <span class="font-bold text-gray-600 text-sm">預設通用預算 (NT$)</span>
                         </div>
                         <input type="number" id="budget-input" onchange="saveBudget()" placeholder="20000" class="w-24 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-right text-sm font-bold outline-none focus:border-[#92A8D1]">
                     </div>
@@ -219,12 +221,9 @@
 
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 focus-within:border-[#F7CAC9] transition-colors">
                         <div class="flex justify-between items-end mb-2">
-                            <!-- 🌟 移除選填字樣，版面更極簡 -->
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">備註</label>
                         </div>
-                        
                         <div id="quick-tags-container" class="flex flex-wrap gap-1.5 mb-3 hidden-view"></div>
-                        
                         <input type="text" id="note" placeholder="寫點什麼..." class="w-full font-bold text-sm text-gray-700 outline-none bg-transparent placeholder-gray-300">
                     </div>
 
@@ -246,7 +245,8 @@
             </div>
         </div>
 
-        <button id="add-btn-main" onclick="openAddModal()" class="fixed bottom-28 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-[0_4px_15px_rgba(146,168,209,0.4)] z-50 active:scale-95 transition-transform border-4 border-gray-50">
+        <!-- 🌟 將加號按鈕移到右下角，並調整為完美的人體工學大小 -->
+        <button id="add-btn-main" onclick="openAddModal()" class="fixed bottom-28 right-6 w-14 h-14 bg-gradient-to-tr from-[#92A8D1] to-[#F7CAC9] rounded-full flex justify-center items-center text-white shadow-lg shadow-[#92A8D1]/40 z-50 active:scale-95 transition-transform">
             <span class="text-3xl font-black mb-1">+</span>
         </button>
 
@@ -357,9 +357,20 @@
             '固定繳費': { icon: '📱', color: '#D8B4E2', type: 'expense' },
             '醫療': { icon: '💊', color: '#FDA4AF', type: 'expense' }, 
             '其他': { icon: '🪙', color: '#E5E7EB', type: 'expense' },
-            '生活費': { icon: '💌', color: '#4ade80', type: 'income' }, 
-            '薪資': { icon: '💰', color: '#22c55e', type: 'income' },
-            '其他收入': { icon: '💵', color: '#a7f3d0', type: 'income' }
+            '收入': { icon: '💰', color: '#34d399', type: 'income' }, 
+
+            '生活費': { icon: '💌', color: '#4ade80', type: 'income', hidden: true }, 
+            '薪資': { icon: '💰', color: '#22c55e', type: 'income', hidden: true },
+            '其他收入': { icon: '💵', color: '#a7f3d0', type: 'income', hidden: true },
+            '正餐': { icon: '🍱', color: '#F7CAC9', type: 'expense', hidden: true },
+            '飲料': { icon: '🧋', color: '#FBCFE8', type: 'expense', hidden: true },
+            '甜點點心': { icon: '🍰', color: '#FDE68A', type: 'expense', hidden: true },
+            '服飾配件': { icon: '👕', color: '#FDE047', type: 'expense', hidden: true },
+            '美容保養': { icon: '💄', color: '#F9A8D4', type: 'expense', hidden: true },
+            '學習': { icon: '📚', color: '#FDBA74', type: 'expense', hidden: true },
+            '投資': { icon: '📈', color: '#34D399', type: 'expense', hidden: true },
+            '繳費訂閱': { icon: '📱', color: '#D8B4E2', type: 'expense', hidden: true },
+            '交際送禮': { icon: '🎁', color: '#FCA5A5', type: 'expense', hidden: true }
         };
 
         const quickTagsConfig = {
@@ -390,11 +401,9 @@
 
         let incomeCategories = Object.keys(categoryConfig).filter(k => categoryConfig[k].type === 'income');
 
-        // 🌟 防呆設計：區分是手動點選，還是系統自動帶入歷史資料
         let isProgrammaticCategoryChange = false;
 
         function handleCategoryChange(selectedCategory) {
-            // 🌟 如果是使用者自己按分類，就清空備註欄！
             if (!isProgrammaticCategoryChange) {
                 document.getElementById('note').value = '';
             }
@@ -432,7 +441,6 @@
                 if (conf.hidden) return; 
                 
                 const isIncome = conf.type === 'income';
-                // 🌟 給收入加上超有質感的翡翠綠底色特效
                 const peerCheckedBg = isIncome ? 'peer-checked:bg-emerald-50' : 'peer-checked:bg-[#E8EEF9]';
                 const peerCheckedBorder = isIncome ? 'peer-checked:border-emerald-400' : 'peer-checked:border-[#92A8D1]';
                 const peerCheckedText = isIncome ? 'peer-checked:text-emerald-600' : 'peer-checked:text-[#6A85B6]';
@@ -448,6 +456,33 @@
                     </label>`;
             });
             document.getElementById('all-categories').innerHTML = html;
+        }
+
+        // 🌟 更新預算文字
+        function promptEditMonthlyBudget() {
+            if(statsRange !== 'month') {
+                alert('💡 小提醒：\n如果要設定「專屬月預算」，請先將區間切換回「單月」喔！');
+                return;
+            }
+            const year = currentStatsDate.getFullYear();
+            const month = String(currentStatsDate.getMonth() + 1).padStart(2, '0');
+            const monthKey = `${year}-${month}`;
+            
+            let budgetMap = JSON.parse(localStorage.getItem('svt_monthly_budgets')) || {};
+            let defaultBudget = localStorage.getItem('svt_budget') || 20000;
+            let currentBudget = budgetMap[monthKey] || defaultBudget;
+            
+            let ans = prompt(`【設定 ${year}年 ${month}月 預算】`, currentBudget);
+            if(ans !== null && ans.trim() !== '') {
+                let val = Number(ans);
+                if(val > 0) {
+                    budgetMap[monthKey] = val;
+                } else {
+                    delete budgetMap[monthKey]; 
+                }
+                localStorage.setItem('svt_monthly_budgets', JSON.stringify(budgetMap));
+                loadStatsData();
+            }
         }
 
         function saveBudget() {
@@ -549,7 +584,6 @@
             const defaultRadio = document.querySelector('input[name="category"][value="飲食"]'); 
             if(defaultRadio) {
                 defaultRadio.checked = true;
-                // 自動帶入時不清空欄位
                 isProgrammaticCategoryChange = true;
                 handleCategoryChange('飲食');
                 isProgrammaticCategoryChange = false;
@@ -574,7 +608,6 @@
             const catRadio = document.querySelector(`input[name="category"][value="${record.category}"]`); 
             if(catRadio) {
                 catRadio.checked = true;
-                // 自動帶入歷史標籤，並保護歷史文字不被清空
                 isProgrammaticCategoryChange = true;
                 handleCategoryChange(record.category);
                 isProgrammaticCategoryChange = false;
@@ -626,7 +659,20 @@
                             renderDailyDetails(selectedDateStr); setTimeout(() => { renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth); }, 50);
                         }
                     },
-                    changeMonth(event, self) { setTimeout(() => renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth), 50); }
+                    changeMonth(event, self) { 
+                        const newDate = new Date(self.selectedYear, self.selectedMonth, 1);
+                        const tzOffset = newDate.getTimezoneOffset() * 60000;
+                        selectedDateStr = new Date(newDate.getTime() - tzOffset).toISOString().split('T')[0];
+                        document.getElementById('record_date').value = selectedDateStr;
+                        
+                        self.settings.selected.dates = [selectedDateStr];
+                        self.update();
+                        
+                        setTimeout(() => { 
+                            renderCalendarBadgesAndTotal(self.selectedYear, self.selectedMonth);
+                            renderDailyDetails(selectedDateStr);
+                        }, 50); 
+                    }
                 }
             });
             myCalendar.init(); fetchAndRenderAll();
@@ -696,13 +742,14 @@
             });
         }
 
+        // 🌟 修復 2：拿掉多餘的 Emoji，精準文字
         function renderDailyDetails(dateStr) {
             const container = document.getElementById('daily-details-container');
             const dailyRecords = allRecords.filter(r => r.record_date === dateStr);
             const d = new Date(dateStr); const days = ['日', '一', '二', '三', '四', '五', '六'];
             const dateTitle = `${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
             if (dailyRecords.length === 0) {
-                container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold">這個月還沒有花費喔！🏝️</div>`;
+                container.innerHTML = `<div class="flex justify-between items-center px-4 mb-2"><div class="font-black text-gray-800 text-sm">${dateTitle}</div></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 text-center text-gray-400 text-sm font-bold">今天還沒有任何花費紀錄喔！</div>`;
                 return;
             }
             let dailyExpenseTwd = 0; let dailyIncomeTwd = 0; let listHTML = '';
@@ -713,7 +760,7 @@
                 const isKrw = r.currency === 'KRW';
                 const displayAmt = isKrw ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
 
-                const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
+                const amountColor = isInc ? 'text-emerald-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 listHTML += `
                     <div class="relative mb-3 rounded-[20px] bg-red-50 shadow-sm border border-transparent overflow-hidden">
                         <div class="absolute inset-y-0 right-0 w-20 flex flex-col items-center justify-center text-red-500 font-black text-2xl cursor-pointer z-0" onclick="confirmDirectDelete(event, '${r.id}')">
@@ -772,9 +819,26 @@
                 sums[item.category] = (sums[item.category] || 0) + valToAdd;
             });
             
-            let baseBudget = Number(localStorage.getItem('svt_budget')) || 20000;
-            if(statsRange === '6months') baseBudget *= 6;
-            if(statsRange === 'year') baseBudget *= 12;
+            let baseBudget = 0;
+            let budgetMap = JSON.parse(localStorage.getItem('svt_monthly_budgets')) || {};
+            let defaultBudget = Number(localStorage.getItem('svt_budget')) || 20000;
+
+            if (statsRange === 'month') {
+                const monthKey = `${currentStatsDate.getFullYear()}-${String(currentStatsDate.getMonth() + 1).padStart(2, '0')}`;
+                baseBudget = budgetMap[monthKey] || defaultBudget;
+            } else if (statsRange === '6months') {
+                for(let i=0; i<6; i++) {
+                    let d = new Date(currentStatsDate.getFullYear(), currentStatsDate.getMonth() - i, 1);
+                    let mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    baseBudget += (budgetMap[mk] || defaultBudget);
+                }
+            } else if (statsRange === 'year') {
+                for(let i=0; i<12; i++) {
+                    let d = new Date(currentStatsDate.getFullYear(), i, 1);
+                    let mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    baseBudget += (budgetMap[mk] || defaultBudget);
+                }
+            }
 
             const progress = Math.min((totalTwdForBudget / baseBudget) * 100, 100).toFixed(1);
             document.getElementById('budget-text').innerText = `${totalTwdForBudget.toLocaleString()} / ${baseBudget.toLocaleString()}`;
@@ -940,7 +1004,7 @@
                 const displayAmt = isKrw ? `₩${r.amount.toLocaleString()}` : `NT$${r.amount.toLocaleString()}`;
                 
                 const isInc = incomeCategories.includes(r.category);
-                const amountColor = isInc ? 'text-green-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
+                const amountColor = isInc ? 'text-emerald-500' : 'text-gray-700'; const sign = isInc ? '+' : '-';
                 const d = new Date(r.record_date); const days = ['日', '一', '二', '三', '四', '五', '六'];
                 const dateDisplay = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (週${days[d.getDay()]})`;
                 const noteHtml = r.note ? `<span class="text-gray-500 font-bold ml-1">${r.note}</span>` : '';
