@@ -155,7 +155,15 @@
 
                     <h3 class="text-xs font-black text-gray-400 mb-2 mt-6 uppercase tracking-wider px-1">系統設定 (自動儲存)</h3>
                     
-                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
+                    <div onclick="openCardLimitModal()" class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors active:scale-95 mt-2">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">💳</span>
+                            <span class="font-bold text-gray-600 text-sm">設定信用卡回饋上限</span>
+                        </div>
+                        <span class="text-gray-400 font-bold text-lg">&rsaquo;</span>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between mt-2">
                         <div class="flex items-center gap-3">
                             <span class="text-xl">💰</span>
                             <span class="font-bold text-gray-600 text-sm">預設通用預算 (NT$)</span>
@@ -163,7 +171,7 @@
                         <input type="number" id="budget-input" onchange="saveBudget()" placeholder="20000" class="w-24 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-right text-sm font-bold outline-none focus:border-[#92A8D1]">
                     </div>
 
-                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between mt-2">
                         <div class="flex items-center gap-3">
                             <span class="text-xl">💱</span>
                             <span class="font-bold text-gray-600 text-sm">韓元即時匯率</span>
@@ -242,6 +250,32 @@
                 <button onclick="closeDrilldownModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
                 <h2 id="drilldown-title" class="text-lg font-black text-gray-800 mb-5 ml-1 bg-gradient-to-r from-[#92A8D1] to-[#F7CAC9] bg-clip-text text-transparent">明細總覽</h2>
                 <div id="drilldown-list" class="space-y-3 pb-6 overflow-hidden"></div>
+            </div>
+        </div>
+
+        <div id="modal-card-limit" class="fixed inset-0 z-[80] flex flex-col justify-end hidden-view">
+            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeCardLimitModal()"></div>
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[80vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <button onclick="closeCardLimitModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
+                <h2 class="text-lg font-black text-gray-800 mb-5 ml-1">💳 信用卡回饋上限設定</h2>
+                <div class="text-xs text-gray-500 font-bold mb-4 px-1 leading-relaxed">
+                    請輸入卡片的「加碼回饋 ％ 數」與「回饋點數/金額上限」。<br>系統會自動幫你換算成「刷卡封頂金額血條」。<br>（無上限的卡片請保持空白）
+                </div>
+                <div id="card-limit-list" class="space-y-3 pb-6"></div>
+            </div>
+        </div>
+
+        <!-- 🌟 分類與付款管理視窗 (包含排序功能) -->
+        <div id="modal-manage" class="fixed inset-0 z-[80] flex flex-col justify-end hidden-view">
+            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" onclick="closeManageModal()"></div>
+            <div class="relative bg-gray-50 rounded-t-[32px] p-6 shadow-xl h-[90vh] overflow-y-auto animate-slide-up no-scrollbar pb-12">
+                <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                <button onclick="closeManageModal()" class="absolute top-5 right-6 w-8 h-8 bg-gray-200 rounded-full text-gray-500 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors">&times;</button>
+                <h2 class="text-lg font-black text-gray-800 mb-5 ml-1">分類與付款管理 ⚙️</h2>
+                
+                <h3 class="text-xs font-black text-[#92A8D1] mb-2 uppercase tracking-wider px-1">付款方式列表 (可上下排序)</h3>
+                <div id="manage-payment-list" class="space-y-2 mb-6"></div>
             </div>
         </div>
 
@@ -335,14 +369,23 @@
             loadStatsData();
         }
 
-        const defaultPayments = ['CUBE卡', '富邦J卡', 'UNIOPEN卡', '韓國卡', '現金', 'LINE PAY', '銀行帳戶'];
+        // 🌟 方案 A：強制覆蓋你指定的黃金排序 (只跑一次)
+        const defaultPayments = ['UNIOPEN卡', '富邦J卡', 'CUBE卡', '現金', '銀行帳戶', '韓國卡', 'LINE PAY'];
+        if (!localStorage.getItem('cbank_payments_ordered')) {
+            localStorage.setItem('cbank_payments', JSON.stringify(defaultPayments));
+            localStorage.setItem('cbank_payments_ordered', 'true');
+        }
         let paymentMethods = JSON.parse(localStorage.getItem('cbank_payments')) || defaultPayments;
+        
+        let cardLimits = JSON.parse(localStorage.getItem('cbank_card_limits')) || {};
 
         function renderPaymentMethods() {
             let html = '';
             paymentMethods.forEach(p => { html += `<option value="${p}">${p}</option>`; });
             html += `<option value="ADD_NEW" class="text-[#92A8D1] font-bold">➕ 新增付款方式...</option>`;
-            document.getElementById('payment_method').innerHTML = html;
+            
+            const selectEl = document.getElementById('payment_method');
+            if (selectEl) selectEl.innerHTML = html;
         }
 
         function handlePaymentChange(select) {
@@ -359,6 +402,50 @@
             }
         }
         
+        // 🌟 方案 B：加上上下移動排序按鈕的後台列表
+        function renderManageLists() {
+            let payHtml = '';
+            paymentMethods.forEach((p, idx) => {
+                payHtml += `<div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <span class="font-bold text-sm text-gray-700">${p}</span>
+                    <div class="flex items-center gap-1">
+                        ${idx > 0 ? `<button onclick="movePayment(${idx}, -1)" class="text-gray-400 text-lg p-1 active:scale-90 transition-transform">⬆️</button>` : `<div class="w-7"></div>`}
+                        ${idx < paymentMethods.length - 1 ? `<button onclick="movePayment(${idx}, 1)" class="text-gray-400 text-lg p-1 active:scale-90 transition-transform">⬇️</button>` : `<div class="w-7"></div>`}
+                        <button onclick="removePayment(${idx})" class="text-red-400 text-xl font-bold px-2 active:scale-90 transition-transform">&times;</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('manage-payment-list').innerHTML = payHtml;
+        }
+
+        function movePayment(idx, dir) {
+            if (idx + dir < 0 || idx + dir >= paymentMethods.length) return;
+            const temp = paymentMethods[idx];
+            paymentMethods[idx] = paymentMethods[idx + dir];
+            paymentMethods[idx + dir] = temp;
+            localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
+            renderManageLists();
+            renderPaymentMethods();
+        }
+
+        function openManageModal() {
+            document.getElementById('modal-manage').classList.remove('hidden-view');
+            renderManageLists();
+        }
+
+        function closeManageModal() {
+            document.getElementById('modal-manage').classList.add('hidden-view');
+        }
+
+        function removePayment(idx) {
+            if(confirm('確定要刪除這個付款方式嗎？')) {
+                paymentMethods.splice(idx, 1);
+                localStorage.setItem('cbank_payments', JSON.stringify(paymentMethods));
+                renderManageLists();
+                renderPaymentMethods();
+            }
+        }
+
         const defaultCategories = {
             '飲食': { icon: '🍽️', color: '#F7CAC9', type: 'expense' }, 
             '交通': { icon: '🚇', color: '#92A8D1', type: 'expense' }, 
@@ -504,6 +591,55 @@
             document.getElementById('budget-input').value = saved;
         }
 
+        function openCardLimitModal() {
+            document.getElementById('modal-card-limit').classList.remove('hidden-view');
+            let html = '';
+            paymentMethods.forEach(method => {
+                let icon = '💳';
+                if(method.includes('現金')) icon = '💵'; else if(method.toUpperCase().includes('PAY')) icon = '📱'; else if(method.includes('帳戶') || method.includes('銀行')) icon = '🏦';
+                
+                const limitData = cardLimits[method] || { percent: '', maxPoints: '' };
+                const calcLimitText = limitData.limit ? `封頂金額 NT$ ${limitData.limit.toLocaleString()}` : '無設定上限';
+
+                html += `
+                <div class="bg-white rounded-[16px] p-4 shadow-sm border border-gray-100 mb-3">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-sm">${icon}</div>
+                        <span class="font-bold text-gray-700 text-sm">${method}</span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="number" id="limit-pct-${method}" value="${limitData.percent}" placeholder="加碼 %" class="w-20 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-center text-sm font-bold outline-none focus:border-[#92A8D1]">
+                        <span class="text-xs font-bold text-gray-400">%</span>
+                        <span class="text-xs font-bold text-gray-300 mx-1">|</span>
+                        <input type="number" id="limit-pts-${method}" value="${limitData.maxPoints}" placeholder="上限額度" class="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-center text-sm font-bold outline-none focus:border-[#92A8D1]">
+                        <button onclick="saveCardLimit('${method}')" class="bg-[#92A8D1] text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-sm active:scale-95">儲存</button>
+                    </div>
+                    <div class="text-[10px] font-bold text-[#F7CAC9] text-right" id="limit-text-${method}">${calcLimitText}</div>
+                </div>`;
+            });
+            document.getElementById('card-limit-list').innerHTML = html;
+        }
+
+        function closeCardLimitModal() {
+            document.getElementById('modal-card-limit').classList.add('hidden-view');
+            loadWalletData(); 
+        }
+
+        function saveCardLimit(method) {
+            const pct = document.getElementById(`limit-pct-${method}`).value;
+            const pts = document.getElementById(`limit-pts-${method}`).value;
+            
+            if (!pct || !pts || Number(pct) <= 0 || Number(pts) <= 0) {
+                delete cardLimits[method];
+                document.getElementById(`limit-text-${method}`).innerText = '已清除上限設定';
+            } else {
+                const limitAmount = Math.round(Number(pts) / (Number(pct) / 100));
+                cardLimits[method] = { percent: pct, maxPoints: pts, limit: limitAmount };
+                document.getElementById(`limit-text-${method}`).innerText = `✅ 封頂金額計算為 NT$ ${limitAmount.toLocaleString()}`;
+            }
+            localStorage.setItem('cbank_card_limits', JSON.stringify(cardLimits));
+        }
+
         let startX, startY;
         let activeSwipeItem = null;
         
@@ -563,7 +699,7 @@
             
             allRecords.forEach(r => {
                 const type = incomeCategories.includes(r.category) ? "收入" : "支出";
-                const note = r.note ? r.note.replace(/,/g, "去") : ""; 
+                const note = r.note ? r.note.replace(/,/g, "，") : ""; 
                 const row = `${r.record_date},${type},${r.category},${r.payment_method},${r.amount},${r.currency},${r.amount_twd},${note}`;
                 csvContent += row + "\n";
             });
